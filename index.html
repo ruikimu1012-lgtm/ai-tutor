@@ -153,9 +153,9 @@ details summary{cursor:pointer; font-weight:800}
 .toast{position:fixed; left:50%; bottom:100px; transform:translateX(-50%); z-index:50; background:var(--ink); color:var(--bg); font-weight:800; padding:10px 18px; border-radius:999px; box-shadow:3px 3px 0 var(--pink); opacity:0; pointer-events:none; transition:opacity .2s; max-width:90vw; text-align:center}
 .toast.on{opacity:1}
 .empty{padding:22px; text-align:center; color:var(--ink2); border:2px dashed color-mix(in srgb,var(--edge) 45%,transparent); border-radius:18px; background:var(--card)}
-.rise{animation:rise .35s ease both; animation-delay:calc(var(--i,0) * 50ms)}
+.enter .rise{animation:rise .35s ease both; animation-delay:calc(var(--i,0) * 50ms)}
 @keyframes rise{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
-@media (prefers-reduced-motion:reduce){ .rise{animation:none} .btn{transition:none} }
+@media (prefers-reduced-motion:reduce){ .enter .rise{animation:none} .btn{transition:none} }
 .login{max-width:420px; margin:10vh auto 0}
 .sticker{display:inline-block; transform:rotate(-3deg); background:var(--yellow); color:#1B1530; border:2px solid var(--edge); border-radius:12px; padding:2px 10px; font-weight:800; font-size:13px; box-shadow:2px 2px 0 var(--sh)}
 .streak{display:inline-flex; align-items:center; gap:6px; font-weight:800}
@@ -220,6 +220,8 @@ async function copy(text){
   const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;left:-9999px'; document.body.append(ta); ta.select();
   try{ document.execCommand('copy'); toast('コピーしました'); }catch(e){ toast('コピーできませんでした'); } ta.remove();
 }
+const safeUrl=u=>/^https?:\/\//i.test(String(u||''))?String(u):null;
+function aiUrl(base,text){ let t=String(text); while(t.length>50&&encodeURIComponent(t).length>7000) t=t.slice(0,Math.floor(t.length*0.85)); return base+encodeURIComponent(t); }
 const vClass=v=>v==='今すぐ試す'?'now':v==='今月中に覚える'?'month':'skip';
 const vShort=v=>v==='今すぐ試す'?'今すぐ':v==='今月中に覚える'?'今月中':v?'見送り':'—';
 function steps(howto){
@@ -251,6 +253,8 @@ const b64dec=s=>{ const bin=atob(s.replace(/\s/g,'')); const u=new Uint8Array(bi
 const b64enc=s=>{ const u=new TextEncoder().encode(s); let bin=''; for(let i=0;i<u.length;i+=0x8000) bin+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(bin); };
 const LS={ get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }, del(k){ try{ localStorage.removeItem(k); }catch(e){} } };
 let rrT=null;
+const typing=()=>[...document.querySelectorAll('#view input[type=text],#view input[type=password],#view textarea')].some(e=>e.value.trim()&&!e.dataset.keep&&e!==document.activeElement&&e.dataset.dirty);
+document.addEventListener('input',e=>{ if(e.target&&e.target.dataset) e.target.dataset.dirty='1'; });
 function rerender(force){ if(force) S.force=true; clearTimeout(rrT); rrT=setTimeout(render,0); }
 
 function applyOp(state,op){
@@ -258,10 +262,12 @@ function applyOp(state,op){
   if(op.op==='set') col[op.id]=op.data;
   else if(op.op==='patch') col[op.id]={...(col[op.id]||{}),...op.data};
   else if(op.op==='del') delete col[op.id];
+  else if(op.op==='inc'){ const o=col[op.id]||{date:op.id,pts:0,read:[]}; const rd=o.read||[];
+    if(op.key&&rd.includes(op.key)) return; col[op.id]={...o,date:o.date||op.id,pts:(o.pts||0)+op.n,read:op.key?[...rd,op.key].slice(-300):rd}; }
 }
 function makeQueued(name,remote){ // github / local：書き込みは手元ですぐ反映し、まとめて保存
   const KQ='tutor.'+name+'.ops', KC='tutor.'+name+'.cache';
-  let base=LS.get(KC)||{state:{v:1,cols:{}},briefs:[]}; let ops=LS.get(KQ)||[]; let busy=false, timer=null;
+  let base=LS.get(KC)||{state:{v:1,cols:{}},briefs:[]}; let ops=LS.get(KQ)||[]; let busy=false, timer=null, lastPut=0;
   const clone=o=>JSON.parse(JSON.stringify(o));
   const view=()=>{ const st=clone(base.state||{cols:{}}); ops.forEach(o=>applyOp(st,o)); COLS.forEach(c=>S.cols[c]=(st.cols&&st.cols[c])||{}); S.briefs=(base.briefs||[]).slice().sort((a,b)=>a.date<b.date?1:-1); };
   const persist=()=>{ LS.set(KQ,ops); LS.set(KC,base); };
@@ -274,10 +280,11 @@ function makeQueued(name,remote){ // github / local：書き込みは手元で�
         sent.forEach(o=>applyOp(st,o));
         const r=await remote.putState(st,f&&f.sha);
         if(r.conflict) continue;
-        base.state=st; ops=ops.slice(sent.length); persist(); view(); setSync('保存済み'); busy=false; if(ops.length) schedule(); rerender(); return;
+        base.state=st; lastPut=Date.now(); ops=ops.slice(sent.length); persist(); view(); setSync('保存済み'); busy=false; if(ops.length) schedule(); rerender(); return;
       }
       setSync('保存待ち');
-    }catch(e){ setSync(navigator.onLine===false?'オフライン（あとで保存）':'保存待ち'); }
+    }catch(e){ if(e.status===401){ S.err='ログインの期限が切れました。もう一度ログインしてください（未保存の分は残っています）。'; S.relogin=true; rerender(); }
+      setSync(navigator.onLine===false?'オフライン（あとで保存）':'保存待ち'); }
     busy=false; schedule(15000);
   }
   const st={
@@ -290,7 +297,7 @@ function makeQueued(name,remote){ // github / local：書き込みは手元で�
     },
     async refresh(first){
       try{ const [f,briefs]=await Promise.all([remote.getState(),remote.getBriefs()]);
-        base={state:f?f.state:(base.state||{v:1,cols:{}}),briefs}; persist(); view(); S.ready=true; S.err=''; setSync(ops.length?'保存待ち':'最新'); rerender(first); flush(); return true;
+        const fresh=f&&!busy&&Date.now()-lastPut>15000; base={state:fresh?f.state:(base.state||{v:1,cols:{}}),briefs}; persist(); view(); S.ready=true; S.err=''; setSync(ops.length?'保存待ち':'最新'); rerender(first); flush(); return true;
       }catch(e){ S.ready=true; if(e.status===401){ S.err='ログインの期限が切れました。もう一度ログインしてください。'; S.relogin=true; } else if(first) S.err='サーバーに届きませんでした。前回の内容を表示しています。'; setSync('オフライン'); rerender(first); return false; }
     },
     write(op){ if(!remote){ applyOp(base.state,op); persist(); view(); } else { ops.push(op); persist(); view(); schedule(); } rerender(true); return Promise.resolve(true); },
@@ -303,7 +310,9 @@ function githubRemote(cfg,token){
   const fail=r=>{ const e=new Error('github '+r.status); e.status=r.status; throw e; };
   const briefCache=LS.get('tutor.github.bsha')||{};
   return {
-    async getState(){ const r=await api('contents/db/state.json?ref=main&t='+Date.now()); if(r.status===404) return null; if(!r.ok) fail(r); const j=await r.json(); return {sha:j.sha,state:JSON.parse(b64dec(j.content))}; },
+    async getState(){ const r=await api('contents/db/state.json?ref=main&t='+Date.now()); if(r.status===404) return null; if(!r.ok) fail(r); const j=await r.json(); let c=j.content;
+      if(!c&&j.size>0&&j.git_url){ const b=await fetch(j.git_url,{cache:'no-store',headers:{Authorization:'Bearer '+token,Accept:'application/vnd.github+json'}}); if(!b.ok) fail(b); c=(await b.json()).content; }
+      return {sha:j.sha,state:JSON.parse(b64dec(c))}; },
     async putState(st,sha){ const body={message:'app '+today(),content:b64enc(JSON.stringify(st)),branch:'main'}; if(sha) body.sha=sha;
       const r=await api('contents/db/state.json',{method:'PUT',body:JSON.stringify(body)}); if(r.status===409||r.status===422) return {conflict:true}; if(!r.ok) fail(r); return {ok:true}; },
     async getBriefs(){ const r=await api('contents/briefs?ref=main&t='+Date.now()); if(r.status===404) return []; if(!r.ok) fail(r);
@@ -356,13 +365,15 @@ function allCards(){
 }
 const dueCards=()=>allCards().filter(c=>(c.due||'')<=today()).sort((a,b)=>(a.due||'')<(b.due||'')?-1:1);
 const pts=()=>list('activity').reduce((s,a)=>s+(a.pts||0),0);
+function actByDay(){ const m={}; list('activity').forEach(a=>{ const d=a.date||a.id.slice(0,10); m[d]=(m[d]||0)+(a.pts||0); }); return m; }
 function level(){ const p=pts(); let i=0; LV.forEach((l,j)=>{ if(p>=l[1]) i=j; }); const nx=LV[i+1]; return {p,i,name:LV[i][0],next:nx&&nx[1],nextName:nx&&nx[0],from:LV[i][1]}; }
-function streak(){ const act=S.cols.activity||{}; let d=today(); if(!(act[d]&&act[d].pts>0)) d=addDays(d,-1); let n=0; while(act[d]&&act[d].pts>0){ n++; d=addDays(d,-1);} return n; }
+function streak(){ const act=actByDay(); let d=today(); if(!(act[d]>0)) d=addDays(d,-1); let n=0; while(act[d]>0){ n++; d=addDays(d,-1);} return n; }
 function addPts(n,key){
   if(!store) return;
   if(key){ if(S.sent.has(key)||readKeys().has(key)) return; S.sent.add(key); }
-  const D=today(); const a=doc('activity',D)||{date:D,pts:0,read:[]};
-  return put('activity',D,{date:D,pts:(a.pts||0)+n,read:key?[...(a.read||[]),key].slice(-300):(a.read||[])});
+  const D=today();
+  if(S.mode==='artifact') return put('activity',D+'~'+uid(),{date:D,pts:n,read:key?[key]:[]});
+  return store.write({op:'inc',col:'activity',id:D,n,key});
 }
 const readKeys=()=>{ const s=new Set(); list('activity').forEach(a=>(a.read||[]).forEach(k=>s.add(k))); return s; };
 const latest=()=>S.briefs[0]||null;
@@ -388,12 +399,14 @@ function route(){
   const p=(location.hash.replace(/^#\/?/,'')||'home').split('/');
   const nv=TABS.some(t=>t[0]===p[0])?p[0]:'home';
   S.view=nv; S.params=p.slice(1).map(decodeURIComponent); S.confirm=null; S.showAll=false;
-  S.force=true; render(); window.scrollTo(0,0);
+  S.force=true; S.scrollTries=true; render(); window.scrollTo(0,0); const v=$('#view'); v.classList.add('enter'); clearTimeout(route.t); route.t=setTimeout(()=>v.classList.remove('enter'),900);
 }
 function render(){
+  const scrollOnce=S.scrollTries; setTimeout(()=>{ if(scrollOnce) S.scrollTries=false; },200);
   const ae=document.activeElement;
   if(!S.force && ae && $('#view').contains(ae) && /^(INPUT|TEXTAREA)$/.test(ae.tagName) && ae.type!=='checkbox'){
-    if(!render.wait){ render.wait=true; ae.addEventListener('blur',()=>{ render.wait=false; rerender(); },{once:true}); } return; }
+    if(render.wait!==ae){ render.wait=ae; ae.addEventListener('blur',()=>{ render.wait=null; setTimeout(()=>{ if(!typing()) render(); },300); },{once:true}); } return; }
+  if(!S.force && typing()) return; // 入力欄に書きかけがある間は、裏の更新で作り直さない（ボタン操作で描き直す）
   S.force=false; nav(); setSync(S.sync);
   const v=$('#view');
   if(S.mode==='login'){ v.replaceChildren(loginView()); return; }
@@ -479,7 +492,7 @@ function newsView(){
   if(ix==null){
     return h('div',{}, head('NEWS',`${md(b.date)}の${(b.items||[]).length}本`, b.headline||null), pager,
       h('div',{class:'card rise'}, newsList(b)),
-      (b.minor||[]).length? h('details',{class:'card flat',style:'margin-top:18px'}, h('summary',{text:`ほかの動き（${b.minor.length}）`}), h('ul',{}, b.minor.map(m=>h('li',{}, m.source? h('a',{href:m.source,target:'_blank',rel:'noopener',text:m.title}) : m.title, m.published? h('span',{class:'muted small',text:' '+md(m.published)}):null)))) : null,
+      (b.minor||[]).length? h('details',{class:'card flat',style:'margin-top:18px'}, h('summary',{text:`ほかの動き（${b.minor.length}）`}), h('ul',{}, b.minor.map(m=>h('li',{}, safeUrl(m.source)? h('a',{href:safeUrl(m.source),target:'_blank',rel:'noopener',text:m.title}) : m.title, m.published? h('span',{class:'muted small',text:' '+md(m.published)}):null)))) : null,
       (b.skipped||[]).length? h('details',{class:'card flat',style:'margin-top:18px'}, h('summary',{text:`見送ったもの（${b.skipped.length}）`}), h('ul',{}, b.skipped.map(s=>h('li',{}, h('b',{text:s.title}), h('span',{class:'muted small',text:'　'+(s.reason||'')}))))) : null,
       b.lesson? h('div',{style:'margin-top:18px'}, lessonCard(b)) : null);
   }
@@ -495,9 +508,9 @@ function newsView(){
     h('div',{class:'blk'}, h('h4',{text:'あなたへの判定'}), h('div',{class:'verd'}, ['A','B','C'].map(k=>{ const v=it.verdict&&it.verdict[k]; return h('div',{class:vClass(v),title:v||''}, h('b',{text:CTX[k]}), h('span',{text:vShort(v)})); }))),
     sp.length? h('div',{class:'blk'}, h('h4',{text:'今日やるなら（手順）'}), h('ol',{class:'steps'}, sp.map(s=>h('li',{text:s})))) : null,
     h('div',{class:'blk'}, h('h4',{text:it.prompt?'そのまま使えるプロンプト':'AIに聞くなら（そのまま貼れる文）'}), h('div',{class:'prompt',text:pr}),
-      h('div',{class:'row'}, h('button',{class:'btn sm',onclick:()=>copy(pr),text:'コピー'}), h('a',{class:'btn sm',href:'https://claude.ai/new?q='+encodeURIComponent(pr),target:'_blank',rel:'noopener',text:'Claudeで開く'}), h('a',{class:'btn sm',href:'https://chatgpt.com/?q='+encodeURIComponent(pr),target:'_blank',rel:'noopener',text:'ChatGPTで開く'}))),
+      h('div',{class:'row'}, h('button',{class:'btn sm',onclick:()=>copy(pr),text:'コピー'}), h('a',{class:'btn sm',href:aiUrl('https://claude.ai/new?q=',pr),target:'_blank',rel:'noopener',text:'Claudeで開く'}), h('a',{class:'btn sm',href:aiUrl('https://chatgpt.com/?q=',pr),target:'_blank',rel:'noopener',text:'ChatGPTで開く'}))),
     it.talk? h('div',{class:'blk'}, h('h4',{text:'人に話すなら（専門家としての一言）'}), h('p',{text:it.talk}), h('button',{class:'btn sm',onclick:()=>copy(it.talk),text:'コピー'})) : null,
-    it.source? h('div',{class:'blk'}, h('h4',{text:'出典'}), h('a',{href:it.source,target:'_blank',rel:'noopener',style:'word-break:break-all',text:it.sourceName||it.source})) : null,
+    safeUrl(it.source)? h('div',{class:'blk'}, h('h4',{text:'出典'}), h('a',{href:safeUrl(it.source),target:'_blank',rel:'noopener',style:'word-break:break-all',text:it.sourceName||it.source})) : null,
     h('div',{class:'row',style:'margin-top:16px'},
       h('button',{class:'btn pri',onclick:()=>addTry(it.title+(sp[0]?'：'+sp[0]:''),it.title,it.source),text:'宿題にする'}),
       h('button',{class:'btn cy',onclick:()=>{ S.askItem={title:it.title,what:it.what,points:it.points}; location.hash='#/ask'; },text:'これについて相談'}),
@@ -514,7 +527,7 @@ function defaultPrompt(it){
 function addTry(text,src,url){ return put('tries',uid(),{text,src:src||'',srcUrl:url||'',status:'todo',createdAt:today()},'宿題に入れました'); }
 async function saveSkill(title,kind,body,from){ const ok=await put('skills',uid(),{title,kind,body,from:(from||'').slice(0,500),createdAt:today()},'スキルに保存しました（+3pt）'); if(ok) addPts(3); return ok; }
 function tryRow(t){
-  return h('label',{class:'ck'}, h('input',{type:'checkbox',checked:t.status==='done',onchange:e=>{ const on=e.target.checked; patch('tries',t.id,{status:on?'done':'todo',doneAt:on?today():''}, on?'おつかれさまです（+5pt）':null); if(on) addPts(5); }}),
+  return h('label',{class:'ck'}, h('input',{type:'checkbox',checked:t.status==='done',onchange:e=>{ const on=e.target.checked; patch('tries',t.id,{status:on?'done':'todo',doneAt:on?today():''}, on?'おつかれさまです（+5pt）':null); if(on&&t.status!=='done') addPts(5,'try-'+t.id); }}),
     h('span',{class:t.status==='done'?'done-t':null,style:'min-width:0'}, t.text, t.src&&!t.text.startsWith(t.src)? h('span',{class:'tiny muted',style:'display:block',text:'から：'+t.src}):null));
 }
 
@@ -535,7 +548,7 @@ function quiz(c,where){
   return h('div',{},
     h('div',{class:'qz-q',text:c.q}),
     h('div',{class:'row tiny muted',style:'margin-top:4px'}, ladder(c.step), c.origin==='news'? 'ニュースから' : c.origin==='chat'? '相談から' : '自分で作成'),
-    open? h('div',{class:'qz-a'}, md2(c.a), c.source? h('a',{class:'tiny',href:c.source,target:'_blank',rel:'noopener',text:'出典'}):null) : null,
+    open? h('div',{class:'qz-a'}, md2(c.a), safeUrl(c.source)? h('a',{class:'tiny',href:safeUrl(c.source),target:'_blank',rel:'noopener',text:'出典'}):null) : null,
     open? h('div',{class:'grades'},
       h('button',{class:'btn sm mi',onclick:g('good'),text:'覚えてた'}),
       h('button',{class:'btn sm y',onclick:g('hard'),text:'あやしい'}),
@@ -622,7 +635,7 @@ function reviewView(){
       h('button',{class:'btn pri',style:'margin-top:12px',onclick:async()=>{
         for(const t of rv.picked){ const c=cand.find(x=>x.title===t); await put('tries',uid(),{text:t,src:c?c.src:'週の振り返り',srcUrl:'',status:'todo',createdAt:today()}); }
         const tst=doc('tests',D); const ok=await put('reviews',D,{date:D,score:tst?tst.score:0,total:tst?tst.total:0,wrong:tst?tst.wrong:[],memo:rv.memo,homework:rv.picked},'振り返りを保存しました（+10pt）');
-        if(ok){ addPts(10); S.rv=null; location.hash='#/me'; } },text:'保存して終わる'})));
+        if(ok){ addPts(10,'review-'+D); S.rv=null; location.hash='#/me'; } },text:'保存して終わる'})));
   }
   return wrap;
 }
@@ -659,7 +672,7 @@ function askView(){
         h('div',{class:'row'}, h('button',{class:'btn pri',type:'submit',disabled:S.chatBusy,text:S.chatBusy?'考え中…':'送る'}), S.chat.length? h('button',{class:'btn sm ghost',type:'button',onclick:()=>{ S.chat=[]; saveChat(); rerender(true); },text:'会話をリセット'}):null))));
   } else {
     const full=()=>`${TUTOR}\n\n${ctxText()}\n\n# 質問\n${inp.value.trim()||'（ここに質問）'}`;
-    const go=(base)=>()=>{ if(!inp.value.trim()) return toast('質問を書いてください'); addPts(1); window.open(base+encodeURIComponent(full().slice(0,6000)),'_blank','noopener'); };
+    const go=(base)=>()=>{ if(!inp.value.trim()) return toast('質問を書いてください'); addPts(1); window.open(aiUrl(base,full()),'_blank','noopener'); };
     const ans=h('textarea',{placeholder:'返ってきた答えを貼ると、スキルやカードとして残せます','aria-label':'答え'});
     const ttl=h('input',{type:'text',placeholder:'名前（例：リール台本の型）','aria-label':'名前'});
     wrap.append(h('div',{class:'grid g2'},
@@ -680,7 +693,7 @@ async function sendChat(text){
   S.drafts.ask=''; S.chat.push({role:'user',content:text}); const a={role:'assistant',content:''}; S.chat.push(a); S.chatBusy=true;
   if(document.activeElement) document.activeElement.blur(); rerender(true);
   const msgs=S.chat.slice(0,-1).map((m,i)=>i===0? {role:'user',content:`${TUTOR}\n\n${ctxText()}\n\n# 質問\n${m.content}`} : m);
-  try{ const r=await S.sample(msgs,{cache:false,onText:({text})=>{ a.content=text; rerender(true); }}); a.content=r.text||a.content; addPts(1); }
+  try{ const r=await S.sample(msgs,{cache:false,onText:({text})=>{ a.content=text; const el=document.querySelector('.msg.a:last-of-type'); if(el){ el.replaceChildren(md2(text)); } }}); a.content=r.text||a.content; addPts(1); }
   catch(e){ a.content= e&&e.code==='rate_limited'? '少し混み合っています。1分ほど待ってから送ってください。' : e&&e.code==='not_granted'? 'AIを使う許可がありません。画面上の許可を確かめてください。' : '答えを出せませんでした。もう一度送ってください。'; }
   S.chatBusy=false; saveChat(); rerender(true);
 }
@@ -691,12 +704,12 @@ function meView(){
   const tries=list('tries').sort((a,b)=>(a.status===b.status? ((a.createdAt||'')<(b.createdAt||'')?1:-1) : a.status==='done'?1:-1));
   const skills=list('skills').sort((a,b)=>(a.createdAt||'')<(b.createdAt||'')?1:-1);
   const reviews=list('reviews').sort((a,b)=>a.date<b.date?1:-1), tests=list('tests').sort((a,b)=>a.date<b.date?1:-1);
-  const act=S.cols.activity||{}; const days=[]; for(let i=27;i>=0;i--) days.push(addDays(today(),-i));
+  const act=actByDay(); const days=[]; for(let i=27;i>=0;i--) days.push(addDays(today(),-i));
   const wrap=h('div',{}, head('RECORDS','記録',`${lv.name} ・ ${lv.p}pt ・ ${st}日連続`));
   const left=h('div',{class:'stack'}), right=h('div',{class:'stack'});
   left.append(levelCard(lv));
   left.append(h('section',{class:'card rise'}, h('div',{class:'row between'}, h('h2',{class:'sec-t',text:'この4週間'}), h('span',{class:'streak'}, h('span',{class:'flame',text:st?'🔥':'🌱'}), `${st}日連続`)),
-    h('div',{class:'cal'}, days.map(d=>{ const p=(act[d]&&act[d].pts)||0; return h('i',{class:(p>=10?'l3':p>=4?'l2':p>0?'l1':'')+(d===today()?' t':''),title:`${md(d)} ${p}pt`}); })),
+    h('div',{class:'cal'}, days.map(d=>{ const p=act[d]||0; return h('i',{class:(p>=10?'l3':p>=4?'l2':p>0?'l1':'')+(d===today()?' t':''),title:`${md(d)} ${p}pt`}); })),
     h('p',{class:'tiny muted',style:'margin-top:6px',text:'色が濃い日ほど、たくさん学んだ日です。ピンクの枠が今日。'})));
   const tIn=h('input',{type:'text',placeholder:'試すことを足す','aria-label':'宿題'});
   left.append(h('section',{class:'card rise',id:'tries'}, h('h2',{class:'sec-t',text:`宿題（のこり ${tries.filter(t=>t.status!=='done').length}）`}),
@@ -705,7 +718,7 @@ function meView(){
   const sT=h('input',{type:'text',placeholder:'名前','aria-label':'スキルの名前'}), sB=h('textarea',{placeholder:'プロンプトや手順をそのまま','aria-label':'スキルの中身'});
   right.append(h('section',{class:'card rise'}, h('h2',{class:'sec-t',text:`スキル（${skills.length}）`}), h('p',{class:'small muted',text:'よく使うプロンプトや手順の置き場所。コピーしてすぐ使えます。'}),
     skills.length? h('ul',{class:'list'}, skills.map(s=>h('li',{}, h('details',{}, h('summary',{}, s.title, h('span',{class:'chip',style:'margin-left:6px',text:s.kind||'メモ'})), h('div',{class:'prompt',text:s.body}),
-      h('div',{class:'row'}, h('button',{class:'btn sm',onclick:()=>copy(s.body),text:'コピー'}), h('a',{class:'btn sm',href:'https://claude.ai/new?q='+encodeURIComponent(String(s.body).slice(0,6000)),target:'_blank',rel:'noopener',text:'Claudeで使う'}), confirmDel('skills',s.id)))))) : null,
+      h('div',{class:'row'}, h('button',{class:'btn sm',onclick:()=>copy(s.body),text:'コピー'}), h('a',{class:'btn sm',href:aiUrl('https://claude.ai/new?q=',s.body),target:'_blank',rel:'noopener',text:'Claudeで使う'}), confirmDel('skills',s.id)))))) : null,
     h('details',{style:'margin-top:8px'}, h('summary',{class:'small',text:'スキルを足す'}), h('form',{class:'stack',style:'margin-top:8px',onsubmit:e=>{ e.preventDefault(); if(!sT.value.trim()||!sB.value.trim()) return; saveSkill(sT.value.trim().slice(0,40),'メモ',sB.value.trim()); sT.value=''; sB.value=''; }}, sT, sB, h('button',{class:'btn sm',type:'submit',text:'保存'})))));
   right.append(h('section',{class:'card rise'}, h('h2',{class:'sec-t',text:'振り返りとテスト'}),
     reviews.length||tests.length? h('ul',{class:'list'}, reviews.map(r=>h('li',{}, h('b',{text:`${md(r.date)} 振り返り`}), h('span',{class:'muted small',text:`　テスト ${r.score}/${r.total}`}), r.memo? h('div',{class:'small',text:r.memo}):null, (r.homework||[]).length? h('div',{class:'tiny muted',text:'宿題：'+r.homework.join(' ／ ')}):null)),
@@ -720,7 +733,7 @@ function meView(){
       S.mode==='github'? h('button',{class:'btn sm',onclick:()=>store.refresh().then(ok=>toast(ok?'最新にしました':'つながりませんでした')),text:'最新にする'}) : null,
       S.mode==='github'? h('button',{class:'btn sm ghost',onclick:logout,text:'この端末からログアウト'}) : null)));
   wrap.append(h('div',{class:'grid g2'}, left, right));
-  if(sub==='tries') setTimeout(()=>{ const el=document.getElementById('tries'); if(el) el.scrollIntoView({behavior:'smooth'}); },80);
+  if(sub==='tries'&&S.scrollTries) setTimeout(()=>{ const el=document.getElementById('tries'); if(el) el.scrollIntoView({behavior:'smooth'}); },80);
   return wrap;
 }
 
@@ -736,7 +749,7 @@ function loginView(){
 async function tryLogin(pass){
   try{ const tok=(await openVault(window.TUTOR_CONFIG.vault,pass)).trim(); if(!/^(gh[opsu]_|github_pat_)/.test(tok)) return false; LS.set('tutor.token',tok); startGithub(tok); return true; }catch(e){ return false; }
 }
-function logout(){ ['tutor.token','tutor.github.cache','tutor.github.ops','tutor.github.bsha'].forEach(k=>LS.del(k)); location.hash='#/home'; location.reload(); }
+function logout(){ LS.del('tutor.token'); location.hash='#/home'; location.reload(); } // 未保存の分（ops）と表示用の控えは残す。次にログインした時に送られる
 function startGithub(tok){
   S.mode='github'; S.err=''; S.relogin=false;
   store=makeQueued('github',githubRemote(window.TUTOR_CONFIG,tok)); store.start();
