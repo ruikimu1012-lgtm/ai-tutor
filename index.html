@@ -237,7 +237,10 @@ const S={ mode:null, view:'home', params:[], briefs:[], cols:{}, sample:null, re
 COLS.forEach(c=>S.cols[c]={});
 const list=c=>Object.entries(S.cols[c]||{}).map(([id,d])=>({...d,id}));
 const doc=(c,id)=>S.cols[c]&&S.cols[c][id]? {...S.cols[c][id],id} : null;
-const profile=()=> (doc('settings','profile')||{}).text||'';
+const DEFAULT_PROFILE='・AIを仕事で使いこなす立場。Claude Code・ChatGPT・Geminiを日常的に使う\n・A. a-TOP：英会話事業のInstagram運用、リール台本づくりの自動化、社内へのAI導入の担当\n・B. 副業：中小企業向けのAI自動化、SNS投稿文の作成代行\n・C. 自分の生活：自分用の相棒AIの仕組みづくり、学び\n・難しい言葉は言い換えて、例を1つ入れてほしい';
+const profile=()=> ((doc('settings','profile')||{}).text||'').trim()||DEFAULT_PROFILE;
+try{ S.chat=(JSON.parse(localStorage.getItem('tutor.chat')||'[]')||[]).filter(m=>m&&m.content).slice(-30); }catch(e){}
+const saveChat=()=>{ try{ localStorage.setItem('tutor.chat',JSON.stringify(S.chat.filter(m=>m.content).slice(-30))); }catch(e){} };
 
 /* ---------- 保存先 ----------
    artifact：claude.ai のアプリのデータベース
@@ -653,7 +656,7 @@ function askView(){
         h('button',{class:'btn sm',onclick:()=>{ S.cardPre={q:(S.chat[i-1]?S.chat[i-1].content:'').slice(0,120),a:m.content.slice(0,400)}; rerender(true); },text:'カードにする'})) : null)));
     wrap.append(h('section',{class:'card'}, S.chat.length? chat : h('p',{class:'muted',text:'下に質問を書いて送ると、ここに答えが出ます。'}), cardBox(),
       h('form',{style:'margin-top:10px',onsubmit:e=>{ e.preventDefault(); sendChat(inp.value); }}, inp, chips,
-        h('div',{class:'row'}, h('button',{class:'btn pri',type:'submit',disabled:S.chatBusy,text:S.chatBusy?'考え中…':'送る'}), S.chat.length? h('button',{class:'btn sm ghost',type:'button',onclick:()=>{ S.chat=[]; rerender(true); },text:'会話をリセット'}):null))));
+        h('div',{class:'row'}, h('button',{class:'btn pri',type:'submit',disabled:S.chatBusy,text:S.chatBusy?'考え中…':'送る'}), S.chat.length? h('button',{class:'btn sm ghost',type:'button',onclick:()=>{ S.chat=[]; saveChat(); rerender(true); },text:'会話をリセット'}):null))));
   } else {
     const full=()=>`${TUTOR}\n\n${ctxText()}\n\n# 質問\n${inp.value.trim()||'（ここに質問）'}`;
     const go=(base)=>()=>{ if(!inp.value.trim()) return toast('質問を書いてください'); addPts(1); window.open(base+encodeURIComponent(full().slice(0,6000)),'_blank','noopener'); };
@@ -679,7 +682,7 @@ async function sendChat(text){
   const msgs=S.chat.slice(0,-1).map((m,i)=>i===0? {role:'user',content:`${TUTOR}\n\n${ctxText()}\n\n# 質問\n${m.content}`} : m);
   try{ const r=await S.sample(msgs,{cache:false,onText:({text})=>{ a.content=text; rerender(true); }}); a.content=r.text||a.content; addPts(1); }
   catch(e){ a.content= e&&e.code==='rate_limited'? '少し混み合っています。1分ほど待ってから送ってください。' : e&&e.code==='not_granted'? 'AIを使う許可がありません。画面上の許可を確かめてください。' : '答えを出せませんでした。もう一度送ってください。'; }
-  S.chatBusy=false; rerender(true);
+  S.chatBusy=false; saveChat(); rerender(true);
 }
 
 /* ---------- 記録 ---------- */
