@@ -1,0 +1,769 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#FFF7EA">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="AI家庭教師">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script>window.TUTOR_CONFIG={"owner": "ruikimu1012-lgtm", "repo": "ai-tutor-data", "vault": "U2FsdGVkX18eg3BoPw7OLiRJmapLuhU1RVJCLYJi039ompVVQBnyUbI/yLdzvQ5M73ZjB8C/jbBw8VLEfLJFZQ=="};</script>
+<title>AI家庭教師</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap">
+<style>
+/* v3「POP」：クリーム色の紙にドット。黒い縁と、ずらした影のステッカー型カード。色は意味ごとに固定 */
+:root{
+  --bg:#FFF7EA; --dot:#EFDDBF; --card:#FFFFFF; --card2:#FFFCF5; --ink:#1B1530; --ink2:#5D5672; --edge:#1B1530; --sh:#1B1530;
+  --cyan:#22C3EE; --pink:#FF5E9C; --yellow:#FFD02E; --mint:#22D39A; --violet:#8A78FF; --orange:#FF8A3D;
+  --cyan-s:#D7F5FD; --pink-s:#FFE1ED; --yellow-s:#FFF1BD; --mint-s:#D2F7E9; --violet-s:#E8E4FF; --orange-s:#FFE6D4;
+  --muted-s:#F1EBDD;
+  --f-d:"Dela Gothic One","Hiragino Sans",sans-serif;
+  --f-b:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#16132A; --dot:#262043; --card:#211C3B; --card2:#1C1834; --ink:#FFF7EA; --ink2:#BDB5D8; --edge:#5A5287; --sh:#06040F;
+  --cyan-s:#123845; --pink-s:#46203A; --yellow-s:#40361A; --mint-s:#143A31; --violet-s:#2D2752; --orange-s:#43291C;
+  --muted-s:#2A2448; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#16132A; --dot:#262043; --card:#211C3B; --card2:#1C1834; --ink:#FFF7EA; --ink2:#BDB5D8; --edge:#5A5287; --sh:#06040F;
+  --cyan-s:#123845; --pink-s:#46203A; --yellow-s:#40361A; --mint-s:#143A31; --violet-s:#2D2752; --orange-s:#43291C;
+  --muted-s:#2A2448; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background-color:var(--bg); background-image:radial-gradient(var(--dot) 1.4px, transparent 1.6px); background-size:18px 18px;
+  color:var(--ink); font-family:var(--f-b); font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased; min-height:100vh}
+a{color:inherit}
+button,input,textarea,select{font:inherit; color:inherit}
+.wrap{max-width:1100px; margin:0 auto; padding:0 16px 120px}
+.top{position:sticky; top:0; z-index:20; background:color-mix(in srgb,var(--bg) 88%,transparent); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-bottom:2px solid var(--edge)}
+.top-in{max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; gap:12px}
+.logo{display:flex; align-items:center; gap:8px; text-decoration:none; font-family:var(--f-d); font-size:20px; letter-spacing:.02em; white-space:nowrap}
+.logo i{display:inline-grid; place-items:center; width:34px; height:34px; border-radius:11px; background:var(--yellow); color:#1B1530; border:2px solid var(--edge); box-shadow:2px 2px 0 var(--sh); font-style:normal; font-size:14px}
+.tabs{display:flex; gap:6px; margin-left:auto}
+.tabs a{text-decoration:none; font-weight:800; font-size:14px; padding:7px 14px; border-radius:999px; border:2px solid transparent}
+.tabs a:hover{border-color:var(--edge)}
+.tabs a.on{background:var(--ink); color:var(--bg)}
+.sync{font-size:12px; font-weight:700; color:var(--ink2); white-space:nowrap}
+.bar{display:none}
+@media (max-width:760px){
+  .tabs{display:none}
+  .sync{margin-left:auto}
+  .bar{display:flex; position:fixed; z-index:30; left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom)); background:var(--card); border:2px solid var(--edge); border-radius:22px; box-shadow:4px 4px 0 var(--sh); padding:6px}
+  .bar a{flex:1; display:flex; flex-direction:column; align-items:center; gap:1px; text-decoration:none; font-size:11px; font-weight:800; padding:6px 0; border-radius:16px; color:var(--ink2)}
+  .bar a svg{width:22px; height:22px}
+  .bar a.on{background:var(--yellow); color:#1B1530}
+}
+h1,h2,h3{margin:0; font-weight:400}
+.d{font-family:var(--f-d); letter-spacing:.01em; line-height:1.3}
+.hero-t{font-family:var(--f-d); font-size:clamp(28px,6vw,50px); line-height:1.2; margin:8px 0 4px}
+.sec-t{font-family:var(--f-d); font-size:21px; margin:0 0 10px}
+.kick{display:inline-block; font-size:12px; font-weight:800; letter-spacing:.12em; padding:3px 10px; border-radius:999px; border:2px solid var(--edge); background:var(--card)}
+.muted{color:var(--ink2)} .small{font-size:13px} .tiny{font-size:12px}
+p{margin:.4em 0}
+.card{background:var(--card); border:2px solid var(--edge); border-radius:20px; box-shadow:4px 4px 0 var(--sh); padding:18px; min-width:0}
+.card.flat{box-shadow:none}
+.grid{display:grid; gap:18px}
+.g2{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+@media (max-width:860px){ .g2{grid-template-columns:minmax(0,1fr)} }
+.stack > * + *{margin-top:18px}
+.row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.between{justify-content:space-between}
+.c-cyan{background:var(--cyan-s)} .c-pink{background:var(--pink-s)} .c-yellow{background:var(--yellow-s)} .c-mint{background:var(--mint-s)} .c-violet{background:var(--violet-s)} .c-orange{background:var(--orange-s)}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; border:2px solid var(--edge); background:var(--card); border-radius:999px; padding:9px 16px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:3px 3px 0 var(--sh); text-decoration:none; transition:transform .08s, box-shadow .08s; min-height:42px; line-height:1.3; text-align:center}
+.btn:hover{transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--sh)}
+.btn:active{transform:translate(3px,3px); box-shadow:0 0 0 var(--sh)}
+.btn:disabled{opacity:.45; cursor:not-allowed; transform:none}
+.btn.pri{background:var(--pink); color:#1B1530}
+.btn.y{background:var(--yellow); color:#1B1530}
+.btn.cy{background:var(--cyan); color:#1B1530}
+.btn.mi{background:var(--mint); color:#1B1530}
+.btn.sm{padding:5px 12px; font-size:13px; min-height:36px; box-shadow:2px 2px 0 var(--sh)}
+.btn.ghost{background:transparent; box-shadow:none; border-color:transparent; text-decoration:underline; padding-left:6px; padding-right:6px}
+.btn.block{width:100%}
+.chip{display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:800; padding:1px 9px; border-radius:999px; border:2px solid var(--edge); background:var(--card); white-space:nowrap; line-height:1.6}
+.chip.now{background:var(--pink); color:#1B1530}
+.chip.month{background:var(--yellow); color:#1B1530}
+.chip.skip{background:var(--muted-s); color:var(--ink2); border-color:color-mix(in srgb,var(--edge) 40%,transparent)}
+.chip small{font-size:10px; opacity:.8; font-weight:700}
+.chip.k-大型発表{background:var(--violet); color:#fff}
+.chip.k-話題{background:var(--orange); color:#1B1530}
+.chip.k-実務{background:var(--cyan); color:#1B1530}
+.chip.ok{background:var(--mint); color:#1B1530}
+.chip.un{background:var(--muted-s)}
+.nl{list-style:none; margin:0; padding:0}
+.nl li + li{border-top:2px dashed color-mix(in srgb,var(--edge) 35%,transparent)}
+.nl a{display:grid; grid-template-columns:42px minmax(0,1fr); gap:12px; padding:12px 2px; text-decoration:none; align-items:start}
+.nl a:hover .nt{text-decoration:underline}
+.num{display:grid; place-items:center; width:40px; height:40px; border-radius:14px; background:var(--cyan); color:#1B1530; border:2px solid var(--edge); font-family:var(--f-d); font-size:18px}
+.nt{font-weight:800; font-size:16px; line-height:1.45}
+.nl .row{margin-top:6px; gap:5px}
+.nl .read .num{background:var(--card2); color:var(--ink2)}
+.blk{border-top:2px dashed color-mix(in srgb,var(--edge) 35%,transparent); padding-top:12px; margin-top:14px}
+.blk h4{margin:0 0 4px; font-size:13px; font-weight:800; letter-spacing:.06em; color:var(--ink2)}
+.blk ul{margin:4px 0 0; padding-left:1.2em}
+.steps{list-style:none; padding:0; margin:6px 0 0; counter-reset:s}
+.steps li{position:relative; padding:5px 0 5px 40px; counter-increment:s}
+.steps li::before{content:counter(s); position:absolute; left:0; top:5px; width:28px; height:28px; border-radius:50%; background:var(--mint); color:#1B1530; border:2px solid var(--edge); display:grid; place-items:center; font-family:var(--f-d); font-size:13px}
+.verd{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:6px}
+.verd div{border:2px solid var(--edge); border-radius:14px; padding:8px 4px; text-align:center; background:var(--card2)}
+.verd b{display:block; font-size:12px; color:var(--ink2)}
+.verd span{font-weight:800; font-size:14px}
+.verd .now{background:var(--pink-s)} .verd .month{background:var(--yellow-s)}
+.prompt{white-space:pre-wrap; word-break:break-word; font-size:14px; background:var(--card2); border:2px solid var(--edge); border-radius:14px; padding:12px; margin:6px 0 8px; max-height:260px; overflow:auto}
+.pager{display:flex; gap:6px; overflow-x:auto; padding:2px 4px 10px 2px; scrollbar-width:none}
+.pager a{flex:0 0 auto; text-decoration:none; font-weight:800; font-size:13px; padding:5px 12px; border-radius:999px; border:2px solid var(--edge); background:var(--card)}
+.pager a.on{background:var(--ink); color:var(--bg)}
+.qz-q{font-weight:800; font-size:18px; line-height:1.5}
+.qz-a{margin-top:10px; padding:12px; border-radius:14px; background:var(--card); border:2px solid var(--edge)}
+.grades{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:12px}
+.ladder{display:inline-flex; gap:3px; align-items:center}
+.ladder i{width:14px; height:8px; border-radius:4px; border:1.5px solid var(--edge); background:var(--card)}
+.ladder i.on{background:var(--mint)}
+.meter{height:16px; border-radius:999px; border:2px solid var(--edge); background:var(--card); overflow:hidden}
+.meter i{display:block; height:100%; background:linear-gradient(90deg,var(--cyan),var(--violet),var(--pink))}
+.lv{display:flex; gap:4px; flex-wrap:wrap; margin-top:8px}
+.lv span{font-size:11px; font-weight:800; padding:1px 8px; border-radius:999px; border:1.5px solid color-mix(in srgb,var(--edge) 50%,transparent); color:var(--ink2)}
+.lv span.on{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+.cal{display:grid; grid-template-columns:repeat(14,minmax(0,1fr)); gap:4px; margin-top:10px}
+.cal i{aspect-ratio:1; border-radius:5px; border:1.5px solid color-mix(in srgb,var(--edge) 45%,transparent); background:var(--card2)}
+.cal i.l1{background:var(--yellow-s)} .cal i.l2{background:var(--yellow)} .cal i.l3{background:var(--orange)}
+.cal i.t{outline:2px solid var(--pink); outline-offset:1px}
+.big{font-family:var(--f-d); font-size:34px; line-height:1}
+input[type=text],input[type=password],textarea{width:100%; border:2px solid var(--edge); border-radius:14px; background:var(--card2); padding:10px 12px; font-size:16px; min-width:0}
+textarea{min-height:96px; resize:vertical; line-height:1.6}
+input:focus,textarea:focus,.btn:focus-visible,a:focus-visible{outline:3px solid var(--cyan); outline-offset:2px}
+label.ck{display:flex; gap:10px; align-items:flex-start; padding:8px 0; cursor:pointer; min-width:0}
+label.ck input{width:22px; height:22px; margin-top:2px; accent-color:var(--mint); flex:0 0 auto}
+.done-t{text-decoration:line-through; color:var(--ink2)}
+.list{list-style:none; padding:0; margin:0}
+.list > li{padding:10px 0; border-top:2px dashed color-mix(in srgb,var(--edge) 30%,transparent)}
+.list > li:first-child{border-top:0}
+details summary{cursor:pointer; font-weight:800}
+.chat{display:flex; flex-direction:column; gap:10px; margin:4px 0 10px}
+.msg{max-width:90%; padding:10px 14px; border-radius:18px; border:2px solid var(--edge); min-width:0; word-break:break-word}
+.msg.u{align-self:flex-end; background:var(--cyan-s); border-bottom-right-radius:6px}
+.msg.a{align-self:flex-start; background:var(--card2); border-bottom-left-radius:6px}
+.msg p:first-child{margin-top:0} .msg p:last-child{margin-bottom:0}
+.toast{position:fixed; left:50%; bottom:100px; transform:translateX(-50%); z-index:50; background:var(--ink); color:var(--bg); font-weight:800; padding:10px 18px; border-radius:999px; box-shadow:3px 3px 0 var(--pink); opacity:0; pointer-events:none; transition:opacity .2s; max-width:90vw; text-align:center}
+.toast.on{opacity:1}
+.empty{padding:22px; text-align:center; color:var(--ink2); border:2px dashed color-mix(in srgb,var(--edge) 45%,transparent); border-radius:18px; background:var(--card)}
+.rise{animation:rise .35s ease both; animation-delay:calc(var(--i,0) * 50ms)}
+@keyframes rise{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+@media (prefers-reduced-motion:reduce){ .rise{animation:none} .btn{transition:none} }
+.login{max-width:420px; margin:10vh auto 0}
+.sticker{display:inline-block; transform:rotate(-3deg); background:var(--yellow); color:#1B1530; border:2px solid var(--edge); border-radius:12px; padding:2px 10px; font-weight:800; font-size:13px; box-shadow:2px 2px 0 var(--sh)}
+.streak{display:inline-flex; align-items:center; gap:6px; font-weight:800}
+.flame{font-size:20px}
+.lesson-term{display:inline-block; font-weight:800; background:var(--violet-s); border:2px solid var(--edge); border-radius:10px; padding:0 8px}
+.ideas{display:flex; gap:6px; overflow-x:auto; padding:8px 4px 8px 0; scrollbar-width:none}
+.ideas .btn{flex:0 0 auto}
+</style>
+</head><body>
+
+
+<header class="top"><div class="top-in">
+  <a class="logo" href="#/home"><i>AI</i>家庭教師</a>
+  <nav class="tabs" id="tabs" aria-label="画面"></nav>
+  <span class="sync" id="sync"></span>
+</div></header>
+<main class="wrap" id="view"></main>
+<nav class="bar" id="bar" aria-label="画面"></nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(()=>{
+'use strict';
+/* ---------- 基本 ---------- */
+const INTERVALS=[1,3,7,14,30,60];
+const LV=[['見習い',0],['使い手',60],['相談役',200],['専門家',500],['第一人者',1000]];
+const CTX={A:'a-TOP',B:'副業',C:'生活'};
+const COLS=['cards','tries','skills','reviews','tests','activity','terms','settings'];
+const $=s=>document.querySelector(s);
+const today=()=>new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
+const addDays=(d,n)=>{const t=new Date(d+'T00:00:00Z'); t.setUTCDate(t.getUTCDate()+n); return t.toISOString().slice(0,10);};
+const dow=d=>new Date(d+'T00:00:00Z').getUTCDay();
+const md=d=>d? (+d.slice(5,7))+'/'+(+d.slice(8,10)) : '';
+const WD='日月火水木金土';
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function h(tag,p,...kids){
+  const e=document.createElement(tag);
+  if(p) for(const k in p){ const v=p[k]; if(v==null||v===false) continue;
+    if(k==='class') e.className=v; else if(k==='text') e.textContent=v; else if(k==='style') e.style.cssText=v;
+    else if(k.startsWith('on')) e.addEventListener(k.slice(2),v);
+    else if(k==='value') e.value=v; else if(k==='checked'||k==='disabled') e[k]=!!v;
+    else e.setAttribute(k,v===true?'':v); }
+  const add=c=>{ if(c==null||c===false) return; if(Array.isArray(c)) c.forEach(add); else e.append(c instanceof Node?c:document.createTextNode(String(c))); };
+  kids.forEach(add); return e;
+}
+function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('on'),2200); }
+function md2(text){
+  const frag=document.createDocumentFragment(); let ul=null;
+  const inline=s=>{ const out=[]; let last=0; const re=/\*\*[^*]+\*\*|`[^`]+`/g; let m;
+    while((m=re.exec(s))){ if(m.index>last) out.push(s.slice(last,m.index)); const t=m[0]; out.push(t.startsWith('**')?h('strong',{text:t.slice(2,-2)}):h('code',{text:t.slice(1,-1)})); last=m.index+t.length; }
+    if(last<s.length) out.push(s.slice(last)); return out; };
+  for(const raw of String(text||'').split('\n')){ const line=raw.trimEnd();
+    const li=line.match(/^\s*(?:[-*・•]|\d+[.)])\s+(.*)$/);
+    if(li){ if(!ul){ ul=h('ul'); frag.append(ul);} ul.append(h('li',{},inline(li[1]))); continue; }
+    ul=null; if(!line.trim()) continue;
+    const hd=line.match(/^#{1,4}\s+(.*)$/);
+    frag.append(hd? h('p',{},h('strong',{},inline(hd[1]))) : h('p',{},inline(line))); }
+  return frag;
+}
+async function copy(text){
+  try{ await navigator.clipboard.writeText(text); toast('コピーしました'); return; }catch(e){}
+  const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;left:-9999px'; document.body.append(ta); ta.select();
+  try{ document.execCommand('copy'); toast('コピーしました'); }catch(e){ toast('コピーできませんでした'); } ta.remove();
+}
+const vClass=v=>v==='今すぐ試す'?'now':v==='今月中に覚える'?'month':'skip';
+const vShort=v=>v==='今すぐ試す'?'今すぐ':v==='今月中に覚える'?'今月中':v?'見送り':'—';
+function steps(howto){
+  if(Array.isArray(howto)) return howto.filter(Boolean);
+  const s=String(howto||'').trim(); if(!s) return [];
+  const parts=s.split(/\s*[①②③④⑤⑥]\s*/).map(x=>x.trim()).filter(Boolean);
+  if(parts.length>1) return parts;
+  const lines=s.split(/\n+/).map(x=>x.replace(/^\s*\d+[.)]\s*/,'').trim()).filter(Boolean);
+  return lines.length>1? lines : [s];
+}
+
+/* ---------- 状態 ---------- */
+const S={ mode:null, view:'home', params:[], briefs:[], cols:{}, sample:null, ready:false, err:'', sync:'',
+  chat:[], chatBusy:false, askItem:null, flip:{}, rv:null, drafts:{}, confirm:null, showAll:false, cardPre:null, sent:new Set() };
+COLS.forEach(c=>S.cols[c]={});
+const list=c=>Object.entries(S.cols[c]||{}).map(([id,d])=>({...d,id}));
+const doc=(c,id)=>S.cols[c]&&S.cols[c][id]? {...S.cols[c][id],id} : null;
+const profile=()=> (doc('settings','profile')||{}).text||'';
+
+/* ---------- 保存先 ----------
+   artifact：claude.ai のアプリのデータベース
+   github  ：自分の非公開リポジトリ（db/state.json と briefs/*.json）
+   local   ：この端末だけ（お試し） */
+let store=null;
+const b64dec=s=>{ const bin=atob(s.replace(/\s/g,'')); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return new TextDecoder().decode(u); };
+const b64enc=s=>{ const u=new TextEncoder().encode(s); let bin=''; for(let i=0;i<u.length;i+=0x8000) bin+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(bin); };
+const LS={ get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }, del(k){ try{ localStorage.removeItem(k); }catch(e){} } };
+let rrT=null;
+function rerender(force){ if(force) S.force=true; clearTimeout(rrT); rrT=setTimeout(render,0); }
+
+function applyOp(state,op){
+  state.cols=state.cols||{}; const col=state.cols[op.col]=state.cols[op.col]||{};
+  if(op.op==='set') col[op.id]=op.data;
+  else if(op.op==='patch') col[op.id]={...(col[op.id]||{}),...op.data};
+  else if(op.op==='del') delete col[op.id];
+}
+function makeQueued(name,remote){ // github / local：書き込みは手元ですぐ反映し、まとめて保存
+  const KQ='tutor.'+name+'.ops', KC='tutor.'+name+'.cache';
+  let base=LS.get(KC)||{state:{v:1,cols:{}},briefs:[]}; let ops=LS.get(KQ)||[]; let busy=false, timer=null;
+  const clone=o=>JSON.parse(JSON.stringify(o));
+  const view=()=>{ const st=clone(base.state||{cols:{}}); ops.forEach(o=>applyOp(st,o)); COLS.forEach(c=>S.cols[c]=(st.cols&&st.cols[c])||{}); S.briefs=(base.briefs||[]).slice().sort((a,b)=>a.date<b.date?1:-1); };
+  const persist=()=>{ LS.set(KQ,ops); LS.set(KC,base); };
+  const schedule=(ms)=>{ clearTimeout(timer); timer=setTimeout(flush,ms||700); };
+  async function flush(){
+    if(!remote||busy||!ops.length) return; busy=true; setSync('保存中…');
+    try{
+      for(let i=0;i<4;i++){
+        const sent=ops.slice(); const f=await remote.getState(); const st=f? f.state : {v:1,cols:{}};
+        sent.forEach(o=>applyOp(st,o));
+        const r=await remote.putState(st,f&&f.sha);
+        if(r.conflict) continue;
+        base.state=st; ops=ops.slice(sent.length); persist(); view(); setSync('保存済み'); busy=false; if(ops.length) schedule(); rerender(); return;
+      }
+      setSync('保存待ち');
+    }catch(e){ setSync(navigator.onLine===false?'オフライン（あとで保存）':'保存待ち'); }
+    busy=false; schedule(15000);
+  }
+  const st={
+    async start(){ view(); rerender(true);
+      if(!remote){ S.ready=true; rerender(true); return; }
+      setSync('読み込み中…');
+      await st.refresh(true);
+      document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') st.refresh(); });
+      window.addEventListener('online',()=>flush());
+    },
+    async refresh(first){
+      try{ const [f,briefs]=await Promise.all([remote.getState(),remote.getBriefs()]);
+        base={state:f?f.state:(base.state||{v:1,cols:{}}),briefs}; persist(); view(); S.ready=true; S.err=''; setSync(ops.length?'保存待ち':'最新'); rerender(first); flush(); return true;
+      }catch(e){ S.ready=true; if(e.status===401){ S.err='ログインの期限が切れました。もう一度ログインしてください。'; S.relogin=true; } else if(first) S.err='サーバーに届きませんでした。前回の内容を表示しています。'; setSync('オフライン'); rerender(first); return false; }
+    },
+    write(op){ if(!remote){ applyOp(base.state,op); persist(); view(); } else { ops.push(op); persist(); view(); schedule(); } rerender(true); return Promise.resolve(true); },
+    seed(state,briefs){ base={state,briefs}; ops=[]; persist(); view(); }
+  };
+  return st;
+}
+function githubRemote(cfg,token){
+  const api=(p,o={})=>fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/${p}`,{cache:'no-store',...o,headers:{Authorization:'Bearer '+token,Accept:'application/vnd.github+json',...(o.headers||{})}});
+  const fail=r=>{ const e=new Error('github '+r.status); e.status=r.status; throw e; };
+  const briefCache=LS.get('tutor.github.bsha')||{};
+  return {
+    async getState(){ const r=await api('contents/db/state.json?ref=main&t='+Date.now()); if(r.status===404) return null; if(!r.ok) fail(r); const j=await r.json(); return {sha:j.sha,state:JSON.parse(b64dec(j.content))}; },
+    async putState(st,sha){ const body={message:'app '+today(),content:b64enc(JSON.stringify(st)),branch:'main'}; if(sha) body.sha=sha;
+      const r=await api('contents/db/state.json',{method:'PUT',body:JSON.stringify(body)}); if(r.status===409||r.status===422) return {conflict:true}; if(!r.ok) fail(r); return {ok:true}; },
+    async getBriefs(){ const r=await api('contents/briefs?ref=main&t='+Date.now()); if(r.status===404) return []; if(!r.ok) fail(r);
+      const files=(await r.json()).filter(f=>/^\d{4}-\d{2}-\d{2}\.json$/.test(f.name)).sort((a,b)=>a.name<b.name?1:-1).slice(0,40);
+      const got=await Promise.all(files.map(async f=>{ const c=briefCache[f.name]; if(c&&c.sha===f.sha) return c.data;
+        const x=await api('contents/'+f.path+'?ref=main'); if(!x.ok) return null; const j=await x.json();
+        try{ const data=JSON.parse(b64dec(j.content)); briefCache[f.name]={sha:f.sha,data}; return data; }catch(e){ return null; } }));
+      const keep={}; files.forEach(f=>{ if(briefCache[f.name]) keep[f.name]=briefCache[f.name]; }); LS.set('tutor.github.bsha',keep);
+      return got.filter(Boolean); }
+  };
+}
+function artifactStore(db){
+  return {
+    start(){
+      const timer=setTimeout(()=>{ if(!S.ready){ S.err='読み込みに時間がかかっています。開き直してください。'; rerender(); } },10000);
+      const fail=e=>{ clearTimeout(timer); S.err= e&&e.code==='revoked'?'この画面への接続が切れました。':'記録を読み込めませんでした。開き直してください。'; rerender(); };
+      let pending=COLS.length+1;
+      const done=s=>{ if(!s.metadata||!s.metadata.fromCache){ if(--pending<=0&&!S.ready){ S.ready=true; clearTimeout(timer); } } };
+      db.collection('briefs').orderBy('date','desc').limit(40).onSnapshot(s=>{ S.briefs=s.docs.map(d=>({...d.data(),date:d.data().date||d.id})); done(s); rerender(); },fail);
+      COLS.forEach(c=>db.collection(c).onSnapshot(s=>{ const o={}; s.docs.forEach(d=>o[d.id]=d.data()); S.cols[c]=o; done(s); rerender(); },fail));
+    },
+    async write(op){ const ref=db.doc(op.col+'/'+op.id);
+      try{ if(op.op==='set') await ref.set(op.data); else if(op.op==='patch') await ref.set({...(S.cols[op.col][op.id]||{}),...op.data}); else await ref.delete();
+        rerender(true); return true;
+      }catch(e){ toast(e&&e.code==='not_granted'?'書き込みの許可がありません':'保存できませんでした。もう一度試してください'); return false; } }
+  };
+}
+const W=(op,msg)=>store.write(op).then(ok=>{ if(ok&&msg) toast(msg); return ok; });
+const put=(col,id,data,msg)=>W({op:'set',col,id,data},msg);
+const patch=(col,id,data,msg)=>W({op:'patch',col,id,data},msg);
+const del=(col,id,msg)=>W({op:'del',col,id},msg);
+function setSync(t){ S.sync=t; const el=$('#sync'); if(el) el.textContent=t; }
+
+/* ---------- 合言葉で鍵を開ける（openssl enc -aes-256-cbc -pbkdf2 -iter 310000 -md sha256 と同じ形式）---------- */
+async function openVault(b64,pass){
+  const raw=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  if(new TextDecoder().decode(raw.slice(0,8))!=='Salted__') throw new Error('bad vault');
+  const salt=raw.slice(8,16), ct=raw.slice(16);
+  const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveBits']);
+  const bits=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:310000,hash:'SHA-256'},km,384));
+  const key=await crypto.subtle.importKey('raw',bits.slice(0,32),'AES-CBC',false,['decrypt']);
+  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-CBC',iv:bits.slice(32,48)},key,ct));
+}
+
+/* ---------- 計算 ---------- */
+function allCards(){
+  const own=list('cards'); const ids=new Set(own.map(c=>c.id)); const out=own.slice();
+  S.briefs.forEach(b=>(b.cards||[]).forEach((c,i)=>{ const id=c.id||`n-${b.date}-${i+1}`; if(!ids.has(id)&&c.q){ ids.add(id); out.push({id,q:c.q,a:c.a||'',source:c.source||'',origin:'news',createdAt:b.date,due:addDays(b.date,1),step:0,reps:0,lapses:0,virtual:true}); } }));
+  return out;
+}
+const dueCards=()=>allCards().filter(c=>(c.due||'')<=today()).sort((a,b)=>(a.due||'')<(b.due||'')?-1:1);
+const pts=()=>list('activity').reduce((s,a)=>s+(a.pts||0),0);
+function level(){ const p=pts(); let i=0; LV.forEach((l,j)=>{ if(p>=l[1]) i=j; }); const nx=LV[i+1]; return {p,i,name:LV[i][0],next:nx&&nx[1],nextName:nx&&nx[0],from:LV[i][1]}; }
+function streak(){ const act=S.cols.activity||{}; let d=today(); if(!(act[d]&&act[d].pts>0)) d=addDays(d,-1); let n=0; while(act[d]&&act[d].pts>0){ n++; d=addDays(d,-1);} return n; }
+function addPts(n,key){
+  if(!store) return;
+  if(key){ if(S.sent.has(key)||readKeys().has(key)) return; S.sent.add(key); }
+  const D=today(); const a=doc('activity',D)||{date:D,pts:0,read:[]};
+  return put('activity',D,{date:D,pts:(a.pts||0)+n,read:key?[...(a.read||[]),key].slice(-300):(a.read||[])});
+}
+const readKeys=()=>{ const s=new Set(); list('activity').forEach(a=>(a.read||[]).forEach(k=>s.add(k))); return s; };
+const latest=()=>S.briefs[0]||null;
+const briefOf=d=>S.briefs.find(b=>b.date===d)||null;
+const weekStart=()=>{ const d=today(); return addDays(d,-((dow(d)+6)%7)); };
+const nextReview=()=>{ const d=today(); const n=(7-dow(d))%7; return {date:addDays(d,n),days:n}; };
+
+/* ---------- 画面の土台 ---------- */
+const ICON={
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
+  news:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>',
+  learn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="3" width="14" height="16" rx="3"/><path d="M4 7v12a2 2 0 0 0 2 2h10"/><path d="M10 9h6M10 13h4"/></svg>',
+  ask:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M9 10.5h.01M12 10.5h.01M15 10.5h.01" stroke-linecap="round" stroke-width="3"/></svg>',
+  me:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>'
+};
+const TABS=[['home','ホーム'],['news','ニュース'],['learn','学ぶ'],['ask','相談'],['me','記録']];
+function nav(){
+  const hide=S.mode==='login';
+  const mk=icons=>hide?[]:TABS.map(([k,l])=>{ const a=h('a',{href:'#/'+k,class:S.view===k?'on':null,'aria-current':S.view===k?'page':null}); if(icons) a.innerHTML=ICON[k]; a.append(h('span',{text:l})); return a; });
+  $('#tabs').replaceChildren(...mk(false)); $('#bar').replaceChildren(...mk(true)); $('#bar').style.display=hide?'none':'';
+}
+function route(){
+  const p=(location.hash.replace(/^#\/?/,'')||'home').split('/');
+  const nv=TABS.some(t=>t[0]===p[0])?p[0]:'home';
+  S.view=nv; S.params=p.slice(1).map(decodeURIComponent); S.confirm=null; S.showAll=false;
+  S.force=true; render(); window.scrollTo(0,0);
+}
+function render(){
+  const ae=document.activeElement;
+  if(!S.force && ae && $('#view').contains(ae) && /^(INPUT|TEXTAREA)$/.test(ae.tagName) && ae.type!=='checkbox'){
+    if(!render.wait){ render.wait=true; ae.addEventListener('blur',()=>{ render.wait=false; rerender(); },{once:true}); } return; }
+  S.force=false; nav(); setSync(S.sync);
+  const v=$('#view');
+  if(S.mode==='login'){ v.replaceChildren(loginView()); return; }
+  if(!S.mode){ v.replaceChildren(h('div',{class:'empty',style:'margin-top:30px',text:'ひらいています…'})); return; }
+  const body={home:homeView,news:newsView,learn:learnView,ask:askView,me:meView}[S.view]();
+  v.replaceChildren(...[S.err? h('div',{class:'card c-orange',style:'margin-top:16px'}, h('b',{text:S.err}), S.relogin? h('div',{style:'margin-top:8px'},h('button',{class:'btn sm',onclick:logout,text:'ログインし直す'})):null) : null, body].filter(Boolean));
+}
+const head=(kick,title,sub)=>h('div',{style:'margin:22px 0 16px'}, kick?h('span',{class:'kick',text:kick}):null, h('h1',{class:'hero-t',text:title}), sub?h('p',{class:'muted',text:sub}):null);
+const verdictChips=it=>h('span',{class:'row',style:'gap:4px'}, ['A','B','C'].map(k=>h('span',{class:'chip '+vClass(it.verdict&&it.verdict[k])}, h('small',{text:CTX[k]}), vShort(it.verdict&&it.verdict[k]))));
+const kindChip=k=>k?h('span',{class:'chip k-'+k,text:k}):null;
+function newsList(b,limit){
+  const rk=readKeys(); const items=(b.items||[]).slice(0,limit||99);
+  return h('ol',{class:'nl'}, items.map((it,i)=>h('li',{class:rk.has(b.date+'-'+i)?'read':null}, h('a',{href:`#/news/${b.date}/${i}`},
+    h('span',{class:'num',text:i+1}),
+    h('div',{style:'min-width:0'}, h('div',{class:'nt',text:it.title}), h('div',{class:'row'}, kindChip(it.kind), verdictChips(it)))))));
+}
+
+/* ---------- ホーム ---------- */
+function homeView(){
+  const D=today(), b=latest(), isToday=b&&b.date===D, lv=level(), st=streak(), due=dueCards(), nr=nextReview();
+  const tries=list('tries').filter(t=>t.status!=='done').sort((a,b)=>(a.createdAt||'')<(b.createdAt||'')?1:-1);
+  const hour=+new Date(Date.now()+9*3600e3).toISOString().slice(11,13);
+  const hi= hour<4?'夜ふかしですね':hour<11?'おはようございます':hour<18?'こんにちは':'おつかれさまです';
+  const n=b?(b.items||[]).length:0;
+  const wrap=h('div',{});
+  wrap.append(h('div',{style:'margin:22px 0 16px'},
+    h('div',{class:'row between'}, h('span',{class:'kick',text:`${md(D)}（${WD[dow(D)]}）`}), h('span',{class:'streak'}, h('span',{class:'flame',text:st?'🔥':'🌱'}), st? `${st}日つづけて学習中` : '今日から1日目')),
+    h('h1',{class:'hero-t'}, b? (isToday&&b.headline? b.headline : `${isToday?'今日':md(b.date)}、知っておく${n}本。`) : `${hi}。`),
+    h('p',{class:'muted'}, b? (isToday? `${hi}。今朝のAIニュースと、今日の練習です。` : `今朝の号はまだ届いていません（毎朝6:30ごろ）。いまは${md(b.date)}の号です。`) : (S.ready?'最初の「今朝のAI」は、毎朝6:30ごろ届きます。':'読み込み中…'))));
+  const left=h('div',{class:'stack'}), right=h('div',{class:'stack'});
+  if(b){ left.append(h('section',{class:'card rise'},
+      h('div',{class:'row between'}, h('h2',{class:'sec-t',text:'今朝のAI'}), h('a',{class:'btn sm',href:`#/news/${b.date}`,text:'くわしく →'})),
+      newsList(b,S.showAll?99:5),
+      n>5&&!S.showAll? h('button',{class:'btn sm',style:'margin-top:6px',onclick:()=>{S.showAll=true;rerender(true);},text:`ほか${n-5}本を表示`}):null)); }
+  else left.append(h('div',{class:'empty',text:S.ready?'まだニュースがありません。':'読み込み中…'}));
+  if(b&&b.lesson) left.append(lessonCard(b));
+  right.append(h('section',{class:'card c-yellow rise',style:'--i:1'},
+    h('div',{class:'row between'}, h('h2',{class:'sec-t',text:'今日の1問'}), h('span',{class:'chip',text:`復習 ${due.length}枚`})),
+    due.length? quiz(due[0],'home') : h('p',{text:'今日の復習は全部終わりました。えらい！'}),
+    due.length>1? h('a',{class:'btn sm',href:'#/learn',style:'margin-top:12px',text:`残り${due.length-1}枚を続ける →`}):null));
+  right.append(levelCard(lv,true));
+  right.append(h('section',{class:'card rise',style:'--i:3'},
+    h('div',{class:'row between'}, h('h2',{class:'sec-t',text:'宿題'}), h('a',{class:'btn sm',href:'#/me/tries',text:'一覧'})),
+    tries.length? h('div',{}, tries.slice(0,3).map(tryRow)) : h('p',{class:'muted small',text:'ニュースの「宿題にする」で、試すことを入れられます。'})));
+  right.append(h('section',{class:'card c-violet rise',style:'--i:4'},
+    h('h2',{class:'sec-t',text:'週の振り返り'}),
+    h('p',{}, nr.days===0? '今日は振り返りの日です（10問テスト→宿題→来週の宿題）。' : `次は ${md(nr.date)}（日）。あと${nr.days}日。`),
+    h('a',{class:'btn y',href:'#/learn/review',text: nr.days===0?'振り返りを始める':'先にやってみる'})));
+  wrap.append(h('div',{class:'grid g2'}, left, right));
+  return wrap;
+}
+function levelCard(lv,short){
+  const span=lv.next? (lv.p-lv.from)/(lv.next-lv.from) : 1;
+  return h('section',{class:'card c-cyan rise',style:'--i:2'},
+    h('div',{class:'row between'}, h('h2',{class:'sec-t',text:'AIの専門家メーター'}), h('span',{class:'sticker',text:lv.name})),
+    h('div',{class:'row',style:'align-items:baseline;gap:6px'}, h('span',{class:'big',text:lv.p}), h('span',{class:'muted small',text: lv.next? `pt ・ 「${lv.nextName}」まであと${lv.next-lv.p}pt` : 'pt ・ 最高レベル'})),
+    h('div',{class:'meter',style:'margin-top:8px'}, h('i',{style:`width:${Math.round(Math.max(.03,Math.min(1,span))*100)}%`})),
+    h('div',{class:'lv'}, LV.map((l,i)=>h('span',{class:i===lv.i?'on':null,text:l[0]}))),
+    short? null : h('p',{class:'small muted',style:'margin-top:8px',text:'ポイント：記事を読む +1／復習1枚 +1／相談 +1／ミニ講座 +2／スキル保存 +3／宿題を終える +5／週の振り返り +10'}));
+}
+function lessonCard(b){
+  const L=b.lesson; const key='lesson-'+b.date; const read=readKeys().has(key);
+  return h('section',{class:'card c-mint rise',style:'--i:1'},
+    h('div',{class:'row between'}, h('h2',{class:'sec-t',text:'今日のミニ講座'}), L.term? h('span',{class:'lesson-term',text:L.term}):null),
+    h('h3',{class:'d',style:'font-size:19px;margin:2px 0 6px',text:L.title||''}),
+    md2(L.body||''),
+    L.example? h('div',{class:'blk'}, h('h4',{text:'たとえば'}), md2(L.example)) : null,
+    L.explain? h('div',{class:'blk'}, h('h4',{text:'人に説明するなら'}), md2(L.explain)) : null,
+    h('div',{class:'row',style:'margin-top:12px'},
+      read? h('span',{class:'chip ok',text:'読んだ ✓'}) : h('button',{class:'btn sm mi',onclick:()=>{ addPts(2,key); toast('+2pt'); },text:'読んだ（+2pt）'}),
+      L.term? h('button',{class:'btn sm',onclick:()=>saveTerm(L.term,L.meaning||L.title||'',b.date),text:'用語ノートに入れる'}) : null));
+}
+function saveTerm(term,meaning,from){
+  if(list('terms').some(t=>t.term===term)) return toast('もう入っています');
+  return put('terms',uid(),{term,meaning,from:from||today(),createdAt:today()},'用語ノートに入れました');
+}
+
+/* ---------- ニュース ---------- */
+function newsView(){
+  const [d,ix]=S.params; const b=d? briefOf(d) : latest();
+  if(!b) return h('div',{}, head('NEWS','ニュース'), h('div',{class:'empty',text:S.ready?'まだニュースがありません。毎朝6:30ごろ届きます。':'読み込み中…'}));
+  const pager=h('div',{class:'pager'}, S.briefs.slice(0,14).map(x=>h('a',{href:'#/news/'+x.date,class:x.date===b.date?'on':null,text:`${md(x.date)}（${WD[dow(x.date)]}）`})));
+  if(ix==null){
+    return h('div',{}, head('NEWS',`${md(b.date)}の${(b.items||[]).length}本`, b.headline||null), pager,
+      h('div',{class:'card rise'}, newsList(b)),
+      (b.minor||[]).length? h('details',{class:'card flat',style:'margin-top:18px'}, h('summary',{text:`ほかの動き（${b.minor.length}）`}), h('ul',{}, b.minor.map(m=>h('li',{}, m.source? h('a',{href:m.source,target:'_blank',rel:'noopener',text:m.title}) : m.title, m.published? h('span',{class:'muted small',text:' '+md(m.published)}):null)))) : null,
+      (b.skipped||[]).length? h('details',{class:'card flat',style:'margin-top:18px'}, h('summary',{text:`見送ったもの（${b.skipped.length}）`}), h('ul',{}, b.skipped.map(s=>h('li',{}, h('b',{text:s.title}), h('span',{class:'muted small',text:'　'+(s.reason||'')}))))) : null,
+      b.lesson? h('div',{style:'margin-top:18px'}, lessonCard(b)) : null);
+  }
+  const i=+ix, it=(b.items||[])[i]; if(!it) return h('div',{}, head('NEWS','見つかりません'), h('a',{class:'btn',href:'#/news/'+b.date,text:'一覧へ'}));
+  setTimeout(()=>addPts(1,b.date+'-'+i),400);
+  const sp=steps(it.steps||it.howto); const pr=it.prompt||defaultPrompt(it);
+  const art=h('article',{class:'card rise'},
+    h('div',{class:'row'}, kindChip(it.kind), it.verified? h('span',{class:'chip ok',text:'公式などで確認済み'}) : h('span',{class:'chip un',text:'未確認'}), it.published? h('span',{class:'tiny muted',text:'発表 '+it.published.replace(/-/g,'.')}):null),
+    h('h1',{class:'d',style:'font-size:clamp(22px,4.4vw,32px);margin:10px 0 4px',text:it.title}),
+    h('div',{class:'blk'}, h('h4',{text:'何が起きた'}), h('p',{text:it.what||''}), (it.points||[]).length? h('ul',{}, it.points.map(p=>h('li',{text:p}))) : null),
+    it.why? h('div',{class:'blk'}, h('h4',{text:'なぜ大事'}), h('p',{text:it.why})) : null,
+    it.change? h('div',{class:'blk'}, h('h4',{text:'あなたの毎日で変わること'}), h('p',{text:it.change})) : null,
+    h('div',{class:'blk'}, h('h4',{text:'あなたへの判定'}), h('div',{class:'verd'}, ['A','B','C'].map(k=>{ const v=it.verdict&&it.verdict[k]; return h('div',{class:vClass(v)}, h('b',{text:CTX[k]}), h('span',{text:v||'—'})); }))),
+    sp.length? h('div',{class:'blk'}, h('h4',{text:'今日やるなら（手順）'}), h('ol',{class:'steps'}, sp.map(s=>h('li',{text:s})))) : null,
+    h('div',{class:'blk'}, h('h4',{text:it.prompt?'そのまま使えるプロンプト':'AIに聞くなら（そのまま貼れる文）'}), h('div',{class:'prompt',text:pr}),
+      h('div',{class:'row'}, h('button',{class:'btn sm',onclick:()=>copy(pr),text:'コピー'}), h('a',{class:'btn sm',href:'https://claude.ai/new?q='+encodeURIComponent(pr),target:'_blank',rel:'noopener',text:'Claudeで開く'}), h('a',{class:'btn sm',href:'https://chatgpt.com/?q='+encodeURIComponent(pr),target:'_blank',rel:'noopener',text:'ChatGPTで開く'}))),
+    it.talk? h('div',{class:'blk'}, h('h4',{text:'人に話すなら（専門家としての一言）'}), h('p',{text:it.talk}), h('button',{class:'btn sm',onclick:()=>copy(it.talk),text:'コピー'})) : null,
+    it.source? h('div',{class:'blk'}, h('h4',{text:'出典'}), h('a',{href:it.source,target:'_blank',rel:'noopener',style:'word-break:break-all',text:it.sourceName||it.source})) : null,
+    h('div',{class:'row',style:'margin-top:16px'},
+      h('button',{class:'btn pri',onclick:()=>addTry(it.title+(sp[0]?'：'+sp[0]:''),it.title,it.source),text:'宿題にする'}),
+      h('button',{class:'btn cy',onclick:()=>{ S.askItem={title:it.title,what:it.what,points:it.points}; location.hash='#/ask'; },text:'これについて相談'}),
+      h('button',{class:'btn',onclick:()=>saveSkill(it.title.slice(0,40),'プロンプト',pr,it.title),text:'プロンプトを保存'})));
+  const last=(b.items||[]).length-1;
+  const nx=h('div',{class:'row between',style:'margin-top:16px'},
+    i>0? h('a',{class:'btn sm',href:`#/news/${b.date}/${i-1}`,text:'← 前の記事'}) : h('a',{class:'btn sm',href:'#/news/'+b.date,text:'← 一覧'}),
+    i<last? h('a',{class:'btn sm y',href:`#/news/${b.date}/${i+1}`,text:'次の記事 →'}) : h('a',{class:'btn sm y',href:'#/learn',text:'復習へ →'}));
+  return h('div',{style:'margin-top:18px'}, pager, art, nx);
+}
+function defaultPrompt(it){
+  return `次のAIニュースを、私の立場で「今日どう使うか」に落としてください。結論から、手順3つと、つまずきやすい点1つで。\n\n# ニュース\n${it.title}\n${it.what||''}\n${(it.points||[]).map(p=>'・'+p).join('\n')}\n\n# 私について\n${profile()||'AIを仕事で使っている。SNS運用と、中小企業向けのAI自動化をしている。'}`;
+}
+function addTry(text,src,url){ return put('tries',uid(),{text,src:src||'',srcUrl:url||'',status:'todo',createdAt:today()},'宿題に入れました'); }
+async function saveSkill(title,kind,body,from){ const ok=await put('skills',uid(),{title,kind,body,from:(from||'').slice(0,500),createdAt:today()},'スキルに保存しました（+3pt）'); if(ok) addPts(3); return ok; }
+function tryRow(t){
+  return h('label',{class:'ck'}, h('input',{type:'checkbox',checked:t.status==='done',onchange:e=>{ const on=e.target.checked; patch('tries',t.id,{status:on?'done':'todo',doneAt:on?today():''}, on?'おつかれさまです（+5pt）':null); if(on) addPts(5); }}),
+    h('span',{class:t.status==='done'?'done-t':null,style:'min-width:0'}, t.text, t.src&&!t.text.startsWith(t.src)? h('span',{class:'tiny muted',style:'display:block',text:'から：'+t.src}):null));
+}
+
+/* ---------- 復習 ---------- */
+function ladder(step){ const s=Math.max(0,Math.min(step||0,INTERVALS.length-1)); return h('span',{class:'ladder',title:'覚えた度合い'}, INTERVALS.map((_,i)=>h('i',{class:i<s?'on':null}))); }
+function grade(c,r){
+  let step=c.step||0, lapses=c.lapses||0, due;
+  if(r==='good'){ step=Math.min(step+1,INTERVALS.length-1); due=addDays(today(),INTERVALS[step]); }
+  else if(r==='hard') due=addDays(today(),1);
+  else { step=0; lapses++; due=addDays(today(),1); }
+  const {virtual,id,...rest}=c;
+  put('cards',id,{...rest,step,lapses,due,reps:(c.reps||0)+1,last:today(),lastResult:r});
+  addPts(1);
+}
+function quiz(c,where){
+  const k=where+':'+c.id, open=S.flip[k];
+  const g=(r)=>()=>{ delete S.flip[k]; grade(c,r); toast(r==='good'?`OK！次は${INTERVALS[Math.min((c.step||0)+1,5)]}日後`:'明日もう一度出します'); };
+  return h('div',{},
+    h('div',{class:'qz-q',text:c.q}),
+    h('div',{class:'row tiny muted',style:'margin-top:4px'}, ladder(c.step), c.origin==='news'? 'ニュースから' : c.origin==='chat'? '相談から' : '自分で作成'),
+    open? h('div',{class:'qz-a'}, md2(c.a), c.source? h('a',{class:'tiny',href:c.source,target:'_blank',rel:'noopener',text:'出典'}):null) : null,
+    open? h('div',{class:'grades'},
+      h('button',{class:'btn sm mi',onclick:g('good'),text:'覚えてた'}),
+      h('button',{class:'btn sm y',onclick:g('hard'),text:'あやしい'}),
+      h('button',{class:'btn sm pri',onclick:g('again'),text:'忘れてた'}))
+    : h('button',{class:'btn cy',style:'margin-top:12px',onclick:()=>{ S.flip[k]=1; rerender(true); },text:'答えを見る'}));
+}
+
+/* ---------- 学ぶ ---------- */
+function learnView(){
+  if(S.params[0]==='review') return reviewView();
+  const due=dueCards(), cards=allCards();
+  const lessons=S.briefs.filter(b=>b.lesson);
+  const terms=list('terms').sort((a,b)=>(a.createdAt||'')<(b.createdAt||'')?1:-1);
+  const wrap=h('div',{}, head('LEARN','学ぶ',`復習カード ${cards.length}枚 ・ 今日の分 ${due.length}枚`));
+  const left=h('div',{class:'stack'}), right=h('div',{class:'stack'});
+  left.append(h('section',{class:'card c-yellow rise'}, h('div',{class:'row between'}, h('h2',{class:'sec-t',text:'今日の復習'}), h('span',{class:'chip',text:`のこり ${due.length}`})),
+    due.length? quiz(due[0],'learn') : h('div',{}, h('p',{text:'今日の分は終わりました 🎉'}), h('p',{class:'small muted',text:'間をあけて出すほど記憶に残ります（1→3→7→14→30→60日）。'}))));
+  if(lessons.length) left.append(lessonCard(lessons[0]));
+  left.append(h('section',{class:'card rise'}, h('h2',{class:'sec-t',text:'カードを自分で作る'}), cardForm()));
+  right.append(h('section',{class:'card c-violet rise'}, h('h2',{class:'sec-t',text:'週の振り返り'}),
+    h('p',{class:'small',text:'①10問テスト ②今週の宿題を見直す ③来週の宿題を決める。毎週日曜の夜がおすすめ。'}),
+    h('a',{class:'btn y',href:'#/learn/review',text:'振り返りを始める'})));
+  const tIn=h('input',{type:'text',placeholder:'用語（例：RAG）'}), mIn=h('input',{type:'text',placeholder:'意味をひとことで'});
+  right.append(h('section',{class:'card rise'}, h('h2',{class:'sec-t',text:`用語ノート（${terms.length}）`}),
+    terms.length? h('ul',{class:'list'}, terms.map(t=>h('li',{}, h('b',{text:t.term}), h('span',{text:'　'+(t.meaning||'')}), h('div',{class:'row',style:'margin-top:2px'}, h('span',{class:'tiny muted',text:md(t.from)}), confirmDel('terms',t.id))))) : h('p',{class:'muted small',text:'ミニ講座の「用語ノートに入れる」か、ここで足せます。'}),
+    h('form',{class:'stack',style:'margin-top:10px',onsubmit:e=>{ e.preventDefault(); const t=tIn.value.trim(); if(!t) return; saveTerm(t,mIn.value.trim()); tIn.value=''; mIn.value=''; tIn.blur(); mIn.blur(); }}, tIn, mIn, h('button',{class:'btn sm',type:'submit',text:'足す'}))));
+  if(lessons.length>1) right.append(h('details',{class:'card flat'}, h('summary',{text:`ミニ講座のバックナンバー（${lessons.length}）`}), h('ul',{}, lessons.map(b=>h('li',{}, h('a',{href:'#/news/'+b.date,text:`${md(b.date)}　${b.lesson.title}`}))))));
+  right.append(h('details',{class:'card flat'}, h('summary',{text:`カード一覧（${cards.length}）`}), h('ul',{class:'list',style:'margin-top:8px'}, cards.sort((a,b)=>(a.due||'')<(b.due||'')?-1:1).map(c=>h('li',{}, h('div',{style:'font-weight:700',text:c.q}), h('div',{class:'row tiny muted'}, ladder(c.step), '次 '+md(c.due), c.virtual?null:confirmDel('cards',c.id)))))));
+  wrap.append(h('div',{class:'grid g2'}, left, right));
+  return wrap;
+}
+function cardForm(pre){
+  const q=h('textarea',{placeholder:'問い（例：Claude Codeで不具合だけ見るコマンドは？）',style:'min-height:64px','aria-label':'問い'}), a=h('textarea',{placeholder:'答え',style:'min-height:64px','aria-label':'答え'});
+  if(pre){ q.value=pre.q||''; a.value=pre.a||''; }
+  return h('form',{class:'stack',onsubmit:async e=>{ e.preventDefault(); if(!q.value.trim()||!a.value.trim()) return toast('問いと答えを入れてください');
+    const ok=await put('cards',uid(),{q:q.value.trim(),a:a.value.trim(),origin:pre?'chat':'self',source:'',createdAt:today(),due:addDays(today(),1),step:0,reps:0,lapses:0},'カードを作りました（明日から出ます）'); if(ok){ q.value=''; a.value=''; S.cardPre=null; rerender(true); } }},
+    q,a,h('button',{class:'btn sm y',type:'submit',text:'カードにする'}));
+}
+function confirmDel(col,id){
+  const key=col+'/'+id;
+  if(S.confirm===key) return h('span',{class:'row',style:'gap:4px;flex-wrap:nowrap'}, h('button',{class:'btn sm pri',onclick:e=>{ e.preventDefault(); S.confirm=null; del(col,id,'消しました'); },text:'消す'}), h('button',{class:'btn sm ghost',onclick:e=>{ e.preventDefault(); S.confirm=null; rerender(true); },text:'やめる'}));
+  return h('button',{class:'btn sm ghost',onclick:e=>{ e.preventDefault(); S.confirm=key; rerender(true); },text:'消す'});
+}
+
+/* ---------- 週の振り返り ---------- */
+function reviewView(){
+  const D=today(), ws=weekStart();
+  if(!S.rv){ const pool=allCards().map(c=>({c,r:Math.random()})).sort((a,b)=>((b.c.lapses||0)-(a.c.lapses||0))||(a.r-b.r)).slice(0,10).map(x=>x.c); S.rv={step:1,pool,i:0,results:[],memo:'',picked:[],ai:null}; }
+  const rv=S.rv;
+  const wrap=h('div',{}, head('WEEKLY','週の振り返り',`${md(ws)}〜${md(D)}`));
+  wrap.append(h('div',{class:'row',style:'margin-bottom:14px'}, ['10問テスト','今週の宿題','来週の宿題'].map((t,i)=>h('span',{class:'chip'+(rv.step===i+1?' now':rv.step>i+1?' ok':''),text:`${i+1} ${t}`}))));
+  const R=()=>rerender(true);
+  if(rv.step===1){
+    if(!rv.pool.length){ rv.step=2; return reviewView(); }
+    if(rv.i<rv.pool.length){ const c=rv.pool[rv.i]; const k='rv:'+c.id;
+      wrap.append(h('section',{class:'card c-yellow'}, h('div',{class:'row between'}, h('span',{class:'kick',text:`Q${rv.i+1} / ${rv.pool.length}`}), h('span',{class:'tiny muted',text:'答えを思い浮かべてから開く'})),
+        h('div',{class:'qz-q',style:'margin-top:10px',text:c.q}),
+        S.flip[k]? h('div',{}, h('div',{class:'qz-a'}, md2(c.a)), h('div',{class:'grades'},
+          h('button',{class:'btn sm mi',onclick:()=>{ rv.results.push({q:c.q,ok:true}); rv.i++; delete S.flip[k]; R(); },text:'正解'}),
+          h('button',{class:'btn sm pri',onclick:()=>{ rv.results.push({q:c.q,ok:false}); rv.i++; delete S.flip[k]; R(); },text:'まちがい'}),
+          h('button',{class:'btn sm',onclick:()=>{ rv.i++; delete S.flip[k]; R(); },text:'とばす'})))
+        : h('button',{class:'btn cy',style:'margin-top:12px',onclick:()=>{ S.flip[k]=1; R(); },text:'答えを見る'})));
+    } else {
+      const good=rv.results.filter(r=>r.ok).length, wrong=rv.results.filter(r=>!r.ok);
+      wrap.append(h('section',{class:'card c-mint'}, h('div',{class:'big',text:`${good} / ${rv.results.length}`}), h('p',{text: !wrong.length? '全問正解。すばらしい！' : 'まちがえた問題は、もう一度出やすくなります。'}),
+        wrong.length? h('ul',{}, wrong.map(r=>h('li',{text:r.q}))) : null,
+        h('button',{class:'btn y',style:'margin-top:8px',onclick:()=>{ put('tests',D,{date:D,score:good,total:rv.results.length,wrong:wrong.map(r=>r.q)}); rv.step=2; R(); },text:'次へ：今週の宿題'})));
+    }
+  } else if(rv.step===2){
+    const wk=list('tries').filter(t=>(t.createdAt||'')>=addDays(ws,-7));
+    wrap.append(h('section',{class:'card'}, h('h2',{class:'sec-t',text:'今週の宿題'}), h('p',{class:'small muted',text:'できたものにチェック。できなかったものは、そのまま来週に持ち越せます。'}),
+      wk.length? h('div',{}, wk.map(tryRow)) : h('p',{class:'muted',text:'今週の宿題はありませんでした。'}),
+      h('div',{class:'row',style:'margin-top:12px'}, h('button',{class:'btn sm',onclick:()=>{ rv.step=1; rv.i=0; rv.results=[]; R(); },text:'← テストをやり直す'}), h('button',{class:'btn y',onclick:()=>{ rv.step=3; R(); },text:'次へ：来週の宿題'}))));
+  } else {
+    const cand=[]; const seen=new Set();
+    (rv.ai||[]).forEach(x=>{ if(x&&x.title&&!seen.has(x.title)){ seen.add(x.title); cand.push({title:x.title,why:x.why||'AIの提案',src:'週の振り返り（AI）'}); } });
+    S.briefs.filter(b=>b.date>=addDays(D,-7)).forEach(b=>(b.items||[]).forEach(it=>{ const hit=['A','B','C'].filter(k=>it.verdict&&it.verdict[k]==='今すぐ試す'); if(hit.length){ const sp=steps(it.steps||it.howto); const t=it.title+(sp[0]?'：'+sp[0]:''); if(!seen.has(t)){ seen.add(t); cand.push({title:t,why:hit.map(k=>CTX[k]).join('・')+'で「今すぐ試す」',src:it.title}); } } }));
+    const memo=h('textarea',{placeholder:'今週の気づき・来週がんばること（1〜3行）'}); memo.value=rv.memo; memo.addEventListener('input',()=>rv.memo=memo.value);
+    wrap.append(h('section',{class:'card'}, h('h2',{class:'sec-t',text:'来週の宿題を3つまで選ぶ'}),
+      S.sample? h('button',{class:'btn sm cy',style:'margin-bottom:8px',disabled:rv.aiBusy,onclick:suggestHomework,text:rv.aiBusy?'考え中…':'AIに候補を出してもらう'}) : null,
+      cand.length? h('div',{}, cand.slice(0,10).map(c=>h('label',{class:'ck'}, h('input',{type:'checkbox',checked:rv.picked.includes(c.title),onchange:e=>{ if(e.target.checked){ if(rv.picked.length>=3){ e.target.checked=false; return toast('3つまでです'); } rv.picked.push(c.title);} else rv.picked=rv.picked.filter(x=>x!==c.title); }}), h('span',{style:'min-width:0'}, c.title, h('span',{class:'tiny muted',style:'display:block',text:c.why})))))
+        : h('p',{class:'muted',text:'今週のニュースに「今すぐ試す」がありませんでした。メモに自分で書いてもOKです。'}),
+      h('div',{class:'blk'}, h('h4',{text:'メモ'}), memo),
+      h('button',{class:'btn pri',style:'margin-top:12px',onclick:async()=>{
+        for(const t of rv.picked){ const c=cand.find(x=>x.title===t); await put('tries',uid(),{text:t,src:c?c.src:'週の振り返り',srcUrl:'',status:'todo',createdAt:today()}); }
+        const tst=doc('tests',D); const ok=await put('reviews',D,{date:D,score:tst?tst.score:0,total:tst?tst.total:0,wrong:tst?tst.wrong:[],memo:rv.memo,homework:rv.picked},'振り返りを保存しました（+10pt）');
+        if(ok){ addPts(10); S.rv=null; location.hash='#/me'; } },text:'保存して終わる'})));
+  }
+  return wrap;
+}
+async function suggestHomework(){
+  const rv=S.rv; rv.aiBusy=true; rerender(true);
+  try{ const heads=S.briefs.slice(0,7).flatMap(b=>(b.items||[]).map(i=>'・'+i.title)).join('\n');
+    const r=await S.sample.json(`あなたはAIの家庭教師です。次の人が来週1週間で試す「宿題」を3つ考え、JSON配列 [{"title":"具体的な行動（40字以内）","why":"理由（20字以内）"}] だけを返してください。無料か今のプランでできることに限る。\n# この人\n${profile()}\n# 今週のAIニュース\n${heads}\n# 今週のメモ\n${rv.memo||'なし'}`,{modelTier:'quick'});
+    rv.ai=Array.isArray(r)? r.slice(0,3) : []; }catch(e){ toast('候補を出せませんでした'); }
+  rv.aiBusy=false; rerender(true);
+}
+
+/* ---------- 相談 ---------- */
+function ctxText(){
+  const b=latest(); const it=S.askItem;
+  return [`# 私について\n${profile()||'（未記入）'}`,
+    it? `# 相談したいニュース\n${it.title}\n${it.what||''}\n${(it.points||[]).map(p=>'・'+p).join('\n')}` : (b? `# 最近のAIニュース（${md(b.date)}）\n${(b.items||[]).map(i=>'・'+i.title).join('\n')}` : '')].filter(Boolean).join('\n\n');
+}
+const TUTOR='あなたは私専属のAIの家庭教師です。結論から短く、中学生にも分かる日本語で答えてください。例を1つ入れ、最後に「今日やる1歩」を1行で。事実でないことは言わず、分からないことは分からないと言ってください。';
+function askView(){
+  const wrap=h('div',{}, head('ASK','AIに相談', S.askItem? `「${S.askItem.title}」について` : 'あなたのことと、最近のニュースをふまえて答えます'));
+  if(S.askItem) wrap.append(h('div',{class:'row',style:'margin:-6px 0 12px'}, h('span',{class:'chip',text:'記事つき：'+S.askItem.title.slice(0,28)}), h('button',{class:'btn sm ghost',onclick:()=>{ S.askItem=null; rerender(true); },text:'外す'})));
+  const ideas=['今日のニュースで、副業の提案に使えるものは？','リール台本づくりを自動化する最初の一歩は？','今週覚えるべきAI用語を3つ','相棒AIに足すと良い機能は？'];
+  const inp=h('textarea',{placeholder:'聞きたいことを書く',style:'min-height:84px','aria-label':'質問'}); inp.value=S.drafts.ask||''; inp.addEventListener('input',()=>S.drafts.ask=inp.value);
+  const chips=h('div',{class:'ideas'}, ideas.map(t=>h('button',{class:'btn sm',type:'button',onclick:()=>{ inp.value=t; S.drafts.ask=t; inp.focus(); },text:t})));
+  const cardBox=()=> S.cardPre? h('div',{class:'blk'}, h('h4',{text:'カードにする（直してから保存）'}), cardForm(S.cardPre), h('button',{class:'btn sm ghost',onclick:()=>{ S.cardPre=null; rerender(true); },text:'閉じる'})) : null;
+  if(S.sample){
+    const chat=h('div',{class:'chat'}, S.chat.map((m,i)=>h('div',{class:'msg '+(m.role==='user'?'u':'a')}, m.role==='user'? m.content : md2(m.content||'考え中…'),
+      m.role==='assistant'&&m.content&&!S.chatBusy? h('div',{class:'row',style:'margin-top:8px'},
+        h('button',{class:'btn sm',onclick:()=>copy(m.content),text:'コピー'}),
+        h('button',{class:'btn sm',onclick:()=>saveSkill((S.chat[i-1]?S.chat[i-1].content:'相談').slice(0,40),'相談の答え',m.content,S.chat[i-1]?S.chat[i-1].content:''),text:'スキルに保存'}),
+        h('button',{class:'btn sm',onclick:()=>{ S.cardPre={q:(S.chat[i-1]?S.chat[i-1].content:'').slice(0,120),a:m.content.slice(0,400)}; rerender(true); },text:'カードにする'})) : null)));
+    wrap.append(h('section',{class:'card'}, S.chat.length? chat : h('p',{class:'muted',text:'下に質問を書いて送ると、ここに答えが出ます。'}), cardBox(),
+      h('form',{style:'margin-top:10px',onsubmit:e=>{ e.preventDefault(); sendChat(inp.value); }}, inp, chips,
+        h('div',{class:'row'}, h('button',{class:'btn pri',type:'submit',disabled:S.chatBusy,text:S.chatBusy?'考え中…':'送る'}), S.chat.length? h('button',{class:'btn sm ghost',type:'button',onclick:()=>{ S.chat=[]; rerender(true); },text:'会話をリセット'}):null))));
+  } else {
+    const full=()=>`${TUTOR}\n\n${ctxText()}\n\n# 質問\n${inp.value.trim()||'（ここに質問）'}`;
+    const go=(base)=>()=>{ if(!inp.value.trim()) return toast('質問を書いてください'); addPts(1); window.open(base+encodeURIComponent(full().slice(0,6000)),'_blank','noopener'); };
+    const ans=h('textarea',{placeholder:'返ってきた答えを貼ると、スキルやカードとして残せます','aria-label':'答え'});
+    const ttl=h('input',{type:'text',placeholder:'名前（例：リール台本の型）','aria-label':'名前'});
+    wrap.append(h('div',{class:'grid g2'},
+      h('section',{class:'card'}, h('h2',{class:'sec-t',text:'1. 質問を書く'}), inp, chips,
+        h('p',{class:'small muted',text:'「わたしのこと」と最近のニュースを自動でつけて、Claude か ChatGPT に渡します。'}),
+        h('div',{class:'row'}, h('button',{class:'btn pri',onclick:go('https://claude.ai/new?q='),text:'Claudeで聞く'}), h('button',{class:'btn cy',onclick:go('https://chatgpt.com/?q='),text:'ChatGPTで聞く'}), h('button',{class:'btn',onclick:()=>copy(full()),text:'文をコピー'})),
+        h('details',{style:'margin-top:12px'}, h('summary',{class:'small',text:'渡す文を見る'}), h('div',{class:'prompt',text:full()}))),
+      h('section',{class:'card c-mint'}, h('h2',{class:'sec-t',text:'2. 良い答えを残す'}), ttl, h('div',{style:'height:8px'}), ans,
+        h('div',{class:'row',style:'margin-top:8px'},
+          h('button',{class:'btn y',onclick:async()=>{ if(!ans.value.trim()) return toast('答えを貼ってください'); if(await saveSkill((ttl.value.trim()||inp.value.trim()||'相談の答え').slice(0,40),'相談の答え',ans.value.trim(),inp.value.trim())){ ans.value=''; ttl.value=''; } },text:'スキルに保存'}),
+          h('button',{class:'btn',onclick:()=>{ if(!ans.value.trim()) return toast('答えを貼ってください'); S.cardPre={q:inp.value.trim().slice(0,120),a:ans.value.trim().slice(0,400)}; rerender(true); },text:'カードにする'})),
+        cardBox())));
+  }
+  return wrap;
+}
+async function sendChat(text){
+  text=(text||'').trim(); if(!text||S.chatBusy) return;
+  S.drafts.ask=''; S.chat.push({role:'user',content:text}); const a={role:'assistant',content:''}; S.chat.push(a); S.chatBusy=true;
+  if(document.activeElement) document.activeElement.blur(); rerender(true);
+  const msgs=S.chat.slice(0,-1).map((m,i)=>i===0? {role:'user',content:`${TUTOR}\n\n${ctxText()}\n\n# 質問\n${m.content}`} : m);
+  try{ const r=await S.sample(msgs,{cache:false,onText:({text})=>{ a.content=text; rerender(true); }}); a.content=r.text||a.content; addPts(1); }
+  catch(e){ a.content= e&&e.code==='rate_limited'? '少し混み合っています。1分ほど待ってから送ってください。' : e&&e.code==='not_granted'? 'AIを使う許可がありません。画面上の許可を確かめてください。' : '答えを出せませんでした。もう一度送ってください。'; }
+  S.chatBusy=false; rerender(true);
+}
+
+/* ---------- 記録 ---------- */
+function meView(){
+  const sub=S.params[0]; const lv=level(), st=streak();
+  const tries=list('tries').sort((a,b)=>(a.status===b.status? ((a.createdAt||'')<(b.createdAt||'')?1:-1) : a.status==='done'?1:-1));
+  const skills=list('skills').sort((a,b)=>(a.createdAt||'')<(b.createdAt||'')?1:-1);
+  const reviews=list('reviews').sort((a,b)=>a.date<b.date?1:-1), tests=list('tests').sort((a,b)=>a.date<b.date?1:-1);
+  const act=S.cols.activity||{}; const days=[]; for(let i=27;i>=0;i--) days.push(addDays(today(),-i));
+  const wrap=h('div',{}, head('RECORDS','記録',`${lv.name} ・ ${lv.p}pt ・ ${st}日連続`));
+  const left=h('div',{class:'stack'}), right=h('div',{class:'stack'});
+  left.append(levelCard(lv));
+  left.append(h('section',{class:'card rise'}, h('div',{class:'row between'}, h('h2',{class:'sec-t',text:'この4週間'}), h('span',{class:'streak'}, h('span',{class:'flame',text:st?'🔥':'🌱'}), `${st}日連続`)),
+    h('div',{class:'cal'}, days.map(d=>{ const p=(act[d]&&act[d].pts)||0; return h('i',{class:(p>=10?'l3':p>=4?'l2':p>0?'l1':'')+(d===today()?' t':''),title:`${md(d)} ${p}pt`}); })),
+    h('p',{class:'tiny muted',style:'margin-top:6px',text:'色が濃い日ほど、たくさん学んだ日です。ピンクの枠が今日。'})));
+  const tIn=h('input',{type:'text',placeholder:'試すことを足す','aria-label':'宿題'});
+  left.append(h('section',{class:'card rise',id:'tries'}, h('h2',{class:'sec-t',text:`宿題（のこり ${tries.filter(t=>t.status!=='done').length}）`}),
+    tries.length? h('div',{}, tries.map(t=>h('div',{class:'row between',style:'flex-wrap:nowrap;align-items:flex-start'}, tryRow(t), confirmDel('tries',t.id)))) : h('p',{class:'muted small',text:'まだありません。'}),
+    h('form',{class:'row',style:'margin-top:8px;flex-wrap:nowrap',onsubmit:e=>{ e.preventDefault(); const t=tIn.value.trim(); if(!t) return; addTry(t); tIn.value=''; tIn.blur(); }}, tIn, h('button',{class:'btn sm',type:'submit',text:'足す'}))));
+  const sT=h('input',{type:'text',placeholder:'名前','aria-label':'スキルの名前'}), sB=h('textarea',{placeholder:'プロンプトや手順をそのまま','aria-label':'スキルの中身'});
+  right.append(h('section',{class:'card rise'}, h('h2',{class:'sec-t',text:`スキル（${skills.length}）`}), h('p',{class:'small muted',text:'よく使うプロンプトや手順の置き場所。コピーしてすぐ使えます。'}),
+    skills.length? h('ul',{class:'list'}, skills.map(s=>h('li',{}, h('details',{}, h('summary',{}, s.title, h('span',{class:'chip',style:'margin-left:6px',text:s.kind||'メモ'})), h('div',{class:'prompt',text:s.body}),
+      h('div',{class:'row'}, h('button',{class:'btn sm',onclick:()=>copy(s.body),text:'コピー'}), h('a',{class:'btn sm',href:'https://claude.ai/new?q='+encodeURIComponent(String(s.body).slice(0,6000)),target:'_blank',rel:'noopener',text:'Claudeで使う'}), confirmDel('skills',s.id)))))) : null,
+    h('details',{style:'margin-top:8px'}, h('summary',{class:'small',text:'スキルを足す'}), h('form',{class:'stack',style:'margin-top:8px',onsubmit:e=>{ e.preventDefault(); if(!sT.value.trim()||!sB.value.trim()) return; saveSkill(sT.value.trim().slice(0,40),'メモ',sB.value.trim()); sT.value=''; sB.value=''; }}, sT, sB, h('button',{class:'btn sm',type:'submit',text:'保存'})))));
+  right.append(h('section',{class:'card rise'}, h('h2',{class:'sec-t',text:'振り返りとテスト'}),
+    reviews.length||tests.length? h('ul',{class:'list'}, reviews.map(r=>h('li',{}, h('b',{text:`${md(r.date)} 振り返り`}), h('span',{class:'muted small',text:`　テスト ${r.score}/${r.total}`}), r.memo? h('div',{class:'small',text:r.memo}):null, (r.homework||[]).length? h('div',{class:'tiny muted',text:'宿題：'+r.homework.join(' ／ ')}):null)),
+      tests.filter(t=>!reviews.some(r=>r.date===t.date)).map(t=>h('li',{}, h('b',{text:`${md(t.date)} テスト`}), h('span',{class:'muted small',text:`　${t.score}/${t.total}`})))) : h('p',{class:'muted small',text:'まだありません。'})));
+  const ta=h('textarea',{style:'min-height:170px','aria-label':'わたしのこと'}); ta.value=S.drafts.profile!=null? S.drafts.profile : profile(); ta.addEventListener('input',()=>S.drafts.profile=ta.value);
+  right.append(h('section',{class:'card c-orange rise'}, h('h2',{class:'sec-t',text:'わたしのこと'}), h('p',{class:'small',text:'毎朝のニュースの判定と、相談の答えに使います。会社の資料・数字・お客様の情報は書かないでください。'}), ta,
+    h('button',{class:'btn sm',style:'margin-top:8px',onclick:async()=>{ if(await put('settings','profile',{text:ta.value,updatedAt:today()},'保存しました')) S.drafts.profile=null; },text:'保存する'})));
+  right.append(h('section',{class:'card flat'}, h('h2',{class:'sec-t',text:'このアプリ'}),
+    h('p',{class:'small'}, S.mode==='github'? 'サイト版：記録は自分専用の非公開の保管庫に入ります。' : S.mode==='artifact'? 'claude.ai 版：記録は claude.ai のデータベースに入ります。' : 'お試し版：記録はこの端末だけに入ります。'),
+    h('div',{class:'row'},
+      h('button',{class:'btn sm',onclick:()=>{ const r=document.documentElement; const cur=r.getAttribute('data-theme'); const nx=cur==='dark'?'light':cur==='light'?null:'dark'; if(nx) r.setAttribute('data-theme',nx); else r.removeAttribute('data-theme'); LS.set('tutor.theme',nx); toast(nx==='dark'?'ダーク':nx==='light'?'ライト':'端末の設定に合わせます'); },text:'明るさを切り替え'}),
+      S.mode==='github'? h('button',{class:'btn sm',onclick:()=>store.refresh().then(ok=>toast(ok?'最新にしました':'つながりませんでした')),text:'最新にする'}) : null,
+      S.mode==='github'? h('button',{class:'btn sm ghost',onclick:logout,text:'この端末からログアウト'}) : null)));
+  wrap.append(h('div',{class:'grid g2'}, left, right));
+  if(sub==='tries') setTimeout(()=>{ const el=document.getElementById('tries'); if(el) el.scrollIntoView({behavior:'smooth'}); },80);
+  return wrap;
+}
+
+/* ---------- ログイン（サイト版）---------- */
+function loginView(){
+  const pw=h('input',{type:'password',placeholder:'合言葉',autocomplete:'current-password','aria-label':'合言葉'});
+  const msg=h('p',{class:'small',style:'min-height:1.5em'});
+  return h('div',{class:'login'}, h('div',{class:'card rise'},
+    h('h1',{class:'hero-t',style:'font-size:30px',text:'おかえりなさい。'}),
+    h('p',{class:'muted',text:'合言葉を入れると、この端末では次から自動でひらきます。'}),
+    h('form',{class:'stack',onsubmit:async e=>{ e.preventDefault(); msg.textContent='確かめています…'; const ok=await tryLogin(pw.value.trim()); if(!ok){ msg.textContent='合言葉がちがうようです。'; pw.select(); } }}, pw, msg, h('button',{class:'btn pri block',type:'submit',text:'ひらく'}))));
+}
+async function tryLogin(pass){
+  try{ const tok=(await openVault(window.TUTOR_CONFIG.vault,pass)).trim(); if(!/^(gh[opsu]_|github_pat_)/.test(tok)) return false; LS.set('tutor.token',tok); startGithub(tok); return true; }catch(e){ return false; }
+}
+function logout(){ ['tutor.token','tutor.github.cache','tutor.github.ops','tutor.github.bsha'].forEach(k=>LS.del(k)); location.hash='#/home'; location.reload(); }
+function startGithub(tok){
+  S.mode='github'; S.err=''; S.relogin=false;
+  store=makeQueued('github',githubRemote(window.TUTOR_CONFIG,tok)); store.start();
+}
+
+/* ---------- 起動 ---------- */
+async function boot(){
+  const th=LS.get('tutor.theme'); if(th) document.documentElement.setAttribute('data-theme',th);
+  window.addEventListener('hashchange',route);
+  if(window.TUTOR_CONFIG){
+    const m=location.hash.match(/login=([^&]+)/);
+    if(m){ history.replaceState(null,'',location.pathname+'#/home'); }
+    route();
+    if(m && await tryLogin(decodeURIComponent(m[1]))) return;
+    const tok=LS.get('tutor.token'); if(tok){ startGithub(tok); return; }
+    S.mode='login'; render(); return;
+  }
+  route();
+  if(window.claude){
+    const [db,sample]=await Promise.all([claude.use('db'),claude.use('sample')]);
+    S.sample=sample||null;
+    if(!db){ S.mode='artifact'; S.err='この表示では記録を読めません。claude.ai にサインインしているか確かめてください。'; render(); return; }
+    S.mode='artifact'; store=artifactStore(db); store.start(); render(); return;
+  }
+  S.mode='local'; store=makeQueued('local',null);
+  if(window.TUTOR_SEED&&!LS.get('tutor.local.cache')) store.seed(window.TUTOR_SEED.state,window.TUTOR_SEED.briefs);
+  store.start();
+}
+boot();
+})();
+</script>
+
+</body></html>
