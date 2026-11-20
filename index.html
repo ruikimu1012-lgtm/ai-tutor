@@ -75,7 +75,7 @@ p{margin:.4em 0}
 .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
 .between{justify-content:space-between}
 .c-cyan{background:var(--cyan-s)} .c-pink{background:var(--pink-s)} .c-yellow{background:var(--yellow-s)} .c-mint{background:var(--mint-s)} .c-violet{background:var(--violet-s)} .c-orange{background:var(--orange-s)}
-.btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; border:2px solid var(--edge); background:var(--card); border-radius:999px; padding:9px 16px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:3px 3px 0 var(--sh); text-decoration:none; transition:transform .08s, box-shadow .08s; min-height:42px; line-height:1.3; text-align:center}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; border:2px solid var(--edge); background:var(--card); border-radius:999px; padding:9px 16px; font-weight:800; font-size:14px; cursor:pointer; box-shadow:3px 3px 0 var(--sh); text-decoration:none; transition:transform .08s, box-shadow .08s; min-height:42px; line-height:1.3; text-align:center; white-space:nowrap}
 .btn:hover{transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--sh)}
 .btn:active{transform:translate(3px,3px); box-shadow:0 0 0 var(--sh)}
 .btn:disabled{opacity:.45; cursor:not-allowed; transform:none}
@@ -422,7 +422,7 @@ function homeView(){
     h('p',{class:'muted'}, b? (isToday? `${hi}。今朝のAIニュースと、今日の練習です。` : `今朝の号はまだ届いていません（毎朝6:30ごろ）。いまは${md(b.date)}の号です。`) : (S.ready?'最初の「今朝のAI」は、毎朝6:30ごろ届きます。':'読み込み中…'))));
   const left=h('div',{class:'stack'}), right=h('div',{class:'stack'});
   if(b){ left.append(h('section',{class:'card rise'},
-      h('div',{class:'row between'}, h('h2',{class:'sec-t',text:'今朝のAI'}), h('a',{class:'btn sm',href:`#/news/${b.date}`,text:'くわしく →'})),
+      h('div',{class:'row between'}, h('h2',{class:'sec-t',text:isToday?'今朝のAI':`最新号（${md(b.date)}）`}), h('a',{class:'btn sm',href:`#/news/${b.date}`,text:'くわしく →'})),
       newsList(b,S.showAll?99:5),
       n>5&&!S.showAll? h('button',{class:'btn sm',style:'margin-top:6px',onclick:()=>{S.showAll=true;rerender(true);},text:`ほか${n-5}本を表示`}):null)); }
   else left.append(h('div',{class:'empty',text:S.ready?'まだニュースがありません。':'読み込み中…'}));
@@ -489,7 +489,7 @@ function newsView(){
     h('div',{class:'blk'}, h('h4',{text:'何が起きた'}), h('p',{text:it.what||''}), (it.points||[]).length? h('ul',{}, it.points.map(p=>h('li',{text:p}))) : null),
     it.why? h('div',{class:'blk'}, h('h4',{text:'なぜ大事'}), h('p',{text:it.why})) : null,
     it.change? h('div',{class:'blk'}, h('h4',{text:'あなたの毎日で変わること'}), h('p',{text:it.change})) : null,
-    h('div',{class:'blk'}, h('h4',{text:'あなたへの判定'}), h('div',{class:'verd'}, ['A','B','C'].map(k=>{ const v=it.verdict&&it.verdict[k]; return h('div',{class:vClass(v)}, h('b',{text:CTX[k]}), h('span',{text:v||'—'})); }))),
+    h('div',{class:'blk'}, h('h4',{text:'あなたへの判定'}), h('div',{class:'verd'}, ['A','B','C'].map(k=>{ const v=it.verdict&&it.verdict[k]; return h('div',{class:vClass(v),title:v||''}, h('b',{text:CTX[k]}), h('span',{text:vShort(v)})); }))),
     sp.length? h('div',{class:'blk'}, h('h4',{text:'今日やるなら（手順）'}), h('ol',{class:'steps'}, sp.map(s=>h('li',{text:s})))) : null,
     h('div',{class:'blk'}, h('h4',{text:it.prompt?'そのまま使えるプロンプト':'AIに聞くなら（そのまま貼れる文）'}), h('div',{class:'prompt',text:pr}),
       h('div',{class:'row'}, h('button',{class:'btn sm',onclick:()=>copy(pr),text:'コピー'}), h('a',{class:'btn sm',href:'https://claude.ai/new?q='+encodeURIComponent(pr),target:'_blank',rel:'noopener',text:'Claudeで開く'}), h('a',{class:'btn sm',href:'https://chatgpt.com/?q='+encodeURIComponent(pr),target:'_blank',rel:'noopener',text:'ChatGPTで開く'}))),
