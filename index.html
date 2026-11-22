@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<script>window.TUTOR_CONFIG={"owner": "ruikimu1012-lgtm", "repo": "ai-tutor-data", "vault": "U2FsdGVkX18eg3BoPw7OLiRJmapLuhU1RVJCLYJi039ompVVQBnyUbI/yLdzvQ5M73ZjB8C/jbBw8VLEfLJFZQ=="};</script>
+<script>window.TUTOR_CONFIG={"owner": "ruikimu1012-lgtm", "repo": "ai-tutor-data", "vault": "U2FsdGVkX1/7B7Abosvmue/3GRL6rgSGphDgClyiXrqG1y/9edUl0/eiGmnqxJurHa3rjOXprj091GSJ8D3gHQ=="};</script>
 <title>AI家庭教師</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -315,6 +315,8 @@ function githubRemote(cfg,token){
       return {sha:j.sha,state:JSON.parse(b64dec(c))}; },
     async putState(st,sha){ const body={message:'app '+today(),content:b64enc(JSON.stringify(st)),branch:'main'}; if(sha) body.sha=sha;
       const r=await api('contents/db/state.json',{method:'PUT',body:JSON.stringify(body)}); if(r.status===409||r.status===422) return {conflict:true}; if(!r.ok) fail(r); return {ok:true}; },
+    async getFile(path){ const r=await api('contents/'+path+'?ref=main&t='+Date.now()); if(r.status===404) return null; if(!r.ok) fail(r); const j=await r.json(); return JSON.parse(b64dec(j.content)); },
+    async putFile(path,obj){ const r=await api('contents/'+path,{method:'PUT',body:JSON.stringify({message:'ask',content:b64enc(JSON.stringify(obj)),branch:'main'})}); if(!r.ok) fail(r); return true; },
     async getBriefs(){ const r=await api('contents/briefs?ref=main&t='+Date.now()); if(r.status===404) return []; if(!r.ok) fail(r);
       const files=(await r.json()).filter(f=>/^\d{4}-\d{2}-\d{2}\.json$/.test(f.name)).sort((a,b)=>a.name<b.name?1:-1).slice(0,40);
       const got=await Promise.all(files.map(async f=>{ const c=briefCache[f.name]; if(c&&c.sha===f.sha) return c.data;
@@ -401,7 +403,76 @@ function route(){
   S.view=nv; S.params=p.slice(1).map(decodeURIComponent); S.confirm=null; S.showAll=false;
   S.force=true; S.scrollTries=true; render(); window.scrollTo(0,0); const v=$('#view'); v.classList.add('enter'); clearTimeout(route.t); route.t=setTimeout(()=>v.classList.remove('enter'),900);
 }
+/* ---------- アプリの中のAI（サイト版）：Gemini の無料枠。キーは自分の非公開の保管庫に置く ---------- */
+function geminiSample(key){
+  const API='https://generativelanguage.googleapis.com/v1beta';
+  const err=(code,msg)=>{ const e=new Error(msg||code); e.code=code; return e; };
+  async function models(){
+    const c=LS.get('tutor.gmodels'); if(c&&c.key===key.slice(-6)&&Date.now()-c.t<864e5&&c.list.length) return c.list;
+    const r=await fetch(`${API}/models?pageSize=200&key=${encodeURIComponent(key)}`); if(r.status===400||r.status===403) throw err('bad_key');
+    const j=await r.json();
+    const ver=n=>{ const m=n.match(/gemini-(\d+(?:\.\d+)?)/); return m?parseFloat(m[1]):0; };
+    const list=(j.models||[]).map(m=>m.name.replace('models/','')).filter(n=>/^gemini-[\d.]+-flash/.test(n)&&!/image|tts|audio|live|embedding|exp|preview|thinking/.test(n))
+      .sort((a,b)=> (/lite/.test(a)-/lite/.test(b)) || ver(b)-ver(a));
+    if(!list.length) (j.models||[]).forEach(m=>{ const n=m.name.replace('models/',''); if(/flash/.test(n)&&(m.supportedGenerationMethods||[]).includes('generateContent')) list.push(n); });
+    LS.set('tutor.gmodels',{key:key.slice(-6),t:Date.now(),list}); return list;
+  }
+  const toContents=msgs=>msgs.map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
+  async function call(contents,onText,jsonMode){
+    const list=await models(); if(!list.length) throw err('no_model');
+    const skip=LS.get('tutor.gskip')||{}; const day=today();
+    for(const model of list){
+      if(skip[model]===day) continue;
+      const body={contents,generationConfig:jsonMode?{responseMimeType:'application/json'}:{}};
+      const r=await fetch(`${API}/models/${model}:streamGenerateContent?alt=sse&key=${encodeURIComponent(key)}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+      if(r.status===429||r.status===404||r.status===403&&!/API key/.test(await r.clone().text())){ skip[model]=day; LS.set('tutor.gskip',skip); continue; }
+      if(r.status===400||r.status===403) throw err('bad_key');
+      if(!r.ok) throw err('failed');
+      const rd=r.body.getReader(), dec=new TextDecoder(); let buf='', text='';
+      for(;;){ const {done,value}=await rd.read(); if(done) break; buf+=dec.decode(value,{stream:true});
+        let i; while((i=buf.indexOf('\n'))>=0){ const line=buf.slice(0,i).trim(); buf=buf.slice(i+1);
+          if(!line.startsWith('data:')) continue; try{ const j=JSON.parse(line.slice(5)); const t=((j.candidates||[])[0]?.content?.parts||[]).map(p=>p.text||'').join(''); if(t){ text+=t; onText&&onText({text}); } }catch(e){} } }
+      return {text,model};
+    }
+    throw err('rate_limited');
+  }
+  const sample=async(msgs,o={})=>call(toContents(msgs),o.onText,false);
+  sample.json=async(prompt)=>{ const r=await call([{role:'user',parts:[{text:prompt}]}],null,true); return JSON.parse(r.text.replace(/^```(json)?|```$/g,'').trim()); };
+  sample.gemini=true; return sample;
+}
+/* Macの Claude（Max契約の Claude Code）に答えてもらう：asks/<id>.json に置く → Macが answers/<id>.json に答えを置く */
+function macSample(remote){
+  const err=c=>{ const e=new Error(c); e.code=c; return e; };
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  async function ask(payload,onText){
+    const id=uid(), t0=Date.now(); let seen=false;
+    onText&&onText({text:'Macに届けています…'});
+    await remote.putFile(`asks/${id}.json`,{id,createdAt:new Date().toISOString(),...payload});
+    for(;;){
+      await wait(3000); const sec=Math.round((Date.now()-t0)/1000);
+      let r=null; try{ r=await remote.getFile(`answers/${id}.json`); }catch(e){}
+      if(r&&r.status==='done') return r;
+      if(r&&r.status==='error') throw err('failed');
+      if(r) seen=true;
+      if(!seen&&sec>75) throw err('mac_offline');
+      if(sec>480) throw err('timeout');
+      onText&&onText({text:`${seen?'MacのClaudeが考えています':'Macに届けています'}…（${sec}秒）`});
+    }
+  }
+  const sample=async(msgs,o={})=>{ const r=await ask({kind:'chat',messages:msgs},o.onText); return {text:r.text}; };
+  sample.json=async(prompt)=>{ const r=await ask({kind:'json',prompt}); return JSON.parse(r.text.replace(/^```(json)?|```$/g,'').trim()); };
+  sample.mac=true; return sample;
+}
+function engine(){ return ((doc('settings','engine')||{}).mode)||(S.mode==='github'?'mac':'gemini'); }
+function aiSync(){
+  if(S.mode!=='github'&&S.mode!=='local') return;
+  const eng=engine(); let want='';
+  if(eng==='mac'&&S.mode==='github'&&S.remote&&!((LS.get('tutor.mpause')||0)>Date.now())) want='mac';
+  else if(eng==='gemini'){ const k=((doc('settings','gemini')||{}).key||'').trim(); if(k&&LS.get('tutor.gpause')!==today()) want=k; }
+  if(want!==S._gk){ S._gk=want; S.sample=want==='mac'? macSample(S.remote) : want? geminiSample(want) : null; }
+}
 function render(){
+  aiSync();
   const scrollOnce=S.scrollTries; setTimeout(()=>{ if(scrollOnce) S.scrollTries=false; },200);
   const ae=document.activeElement;
   if(!S.force && ae && $('#view').contains(ae) && /^(INPUT|TEXTAREA)$/.test(ae.tagName) && ae.type!=='checkbox'){
@@ -667,6 +738,10 @@ function askView(){
         h('button',{class:'btn sm',onclick:()=>copy(m.content),text:'コピー'}),
         h('button',{class:'btn sm',onclick:()=>saveSkill((S.chat[i-1]?S.chat[i-1].content:'相談').slice(0,40),'相談の答え',m.content,S.chat[i-1]?S.chat[i-1].content:''),text:'スキルに保存'}),
         h('button',{class:'btn sm',onclick:()=>{ S.cardPre={q:(S.chat[i-1]?S.chat[i-1].content:'').slice(0,120),a:m.content.slice(0,400)}; rerender(true); },text:'カードにする'})) : null)));
+    if(S.sample.mac) wrap.append(h('p',{class:'small muted',style:'margin:-4px 0 10px'}, 'MacのClaude（今の契約の中）が答えます。Macが起きている時だけ・10〜60秒ほど。急ぐ時は ',
+      h('button',{class:'btn sm ghost',type:'button',onclick:()=>{ LS.set('tutor.mpause',Date.now()+36e5); rerender(true); },text:'ChatGPT / Claude に渡す形'}),' で。'));
+    if(S.sample.gemini) wrap.append(h('p',{class:'small muted',style:'margin:-4px 0 10px'}, 'Gemini の無料枠で答えます。入力はGoogleの改善に使われることがあるので、悩みや仕事の中身は書かず、深い相談は ',
+      h('button',{class:'btn sm ghost',type:'button',onclick:()=>{ LS.set('tutor.gpause',today()); rerender(true); },text:'Claude / ChatGPT に渡す形'}),' で。'));
     wrap.append(h('section',{class:'card'}, S.chat.length? chat : h('p',{class:'muted',text:'下に質問を書いて送ると、ここに答えが出ます。'}), cardBox(),
       h('form',{style:'margin-top:10px',onsubmit:e=>{ e.preventDefault(); sendChat(inp.value); }}, inp, chips,
         h('div',{class:'row'}, h('button',{class:'btn pri',type:'submit',disabled:S.chatBusy,text:S.chatBusy?'考え中…':'送る'}), S.chat.length? h('button',{class:'btn sm ghost',type:'button',onclick:()=>{ S.chat=[]; saveChat(); rerender(true); },text:'会話をリセット'}):null))));
@@ -694,7 +769,11 @@ async function sendChat(text){
   if(document.activeElement) document.activeElement.blur(); rerender(true);
   const msgs=S.chat.slice(0,-1).map((m,i)=>i===0? {role:'user',content:`${TUTOR}\n\n${ctxText()}\n\n# 質問\n${m.content}`} : m);
   try{ const r=await S.sample(msgs,{cache:false,onText:({text})=>{ a.content=text; const el=document.querySelector('.msg.a:last-of-type'); if(el){ el.replaceChildren(md2(text)); } }}); a.content=r.text||a.content; addPts(1); }
-  catch(e){ a.content= e&&e.code==='rate_limited'? '少し混み合っています。1分ほど待ってから送ってください。' : e&&e.code==='not_granted'? 'AIを使う許可がありません。画面上の許可を確かめてください。' : '答えを出せませんでした。もう一度送ってください。'; }
+  catch(e){ if(S.sample&&S.sample.mac&&(e.code==='mac_offline'||e.code==='timeout'||e.code==='failed')){ LS.set('tutor.mpause',Date.now()+(e.code==='failed'?6e5:18e5)); S.chat.pop(); S.chat.pop(); S.drafts.ask=text; S.chatBusy=false; saveChat();
+      toast(e.code==='failed'?'Macで答えを作れませんでした。今は ChatGPT / Claude に渡す形に切り替えます':'Macが眠っているようです。しばらく ChatGPT / Claude に渡す形に切り替えます'); rerender(true); return; }
+    if(S.sample&&S.sample.gemini&&(e.code==='rate_limited'||e.code==='bad_key'||e.code==='no_model')){ LS.set('tutor.gpause',today()); S.chat.pop(); S.chat.pop(); S.drafts.ask=text; S.chatBusy=false; saveChat();
+      toast(e.code==='bad_key'?'Geminiのキーが使えません。記録→このアプリで確かめてください':'今日の無料枠を使い切りました。今日は Claude / ChatGPT に渡す形に切り替えます'); rerender(true); return; }
+    a.content= e&&e.code==='rate_limited'? '少し混み合っています。1分ほど待ってから送ってください。' : e&&e.code==='not_granted'? 'AIを使う許可がありません。画面上の許可を確かめてください。' : '答えを出せませんでした。もう一度送ってください。'; }
   S.chatBusy=false; saveChat(); rerender(true);
 }
 
@@ -732,6 +811,20 @@ function meView(){
       h('button',{class:'btn sm',onclick:()=>{ const r=document.documentElement; const cur=r.getAttribute('data-theme'); const nx=cur==='dark'?'light':cur==='light'?null:'dark'; if(nx) r.setAttribute('data-theme',nx); else r.removeAttribute('data-theme'); LS.set('tutor.theme',nx); toast(nx==='dark'?'ダーク':nx==='light'?'ライト':'端末の設定に合わせます'); },text:'明るさを切り替え'}),
       S.mode==='github'? h('button',{class:'btn sm',onclick:()=>store.refresh().then(ok=>toast(ok?'最新にしました':'つながりませんでした')),text:'最新にする'}) : null,
       S.mode==='github'? h('button',{class:'btn sm ghost',onclick:logout,text:'この端末からログアウト'}) : null)));
+  if(S.mode==='github'||S.mode==='local'){
+    const gk=((doc('settings','gemini')||{}).key||''); const eng=engine();
+    const ki=h('input',{type:'password',placeholder:'AIza…',autocomplete:'off','aria-label':'GeminiのAPIキー'}); ki.dataset.keep='1';
+    const pick=(m,label)=>h('button',{class:'btn sm'+(eng===m?' pri':''),onclick:()=>{ LS.del('tutor.mpause'); LS.del('tutor.gpause'); put('settings','engine',{mode:m,updatedAt:today()},'切り替えました'); },text:label});
+    right.append(h('section',{class:'card flat'}, h('h2',{class:'sec-t',text:'アプリの中で答えるAI'}),
+      h('div',{class:'row'}, S.mode==='github'? pick('mac','MacのClaude（おすすめ）') : null, pick('gemini','Gemini 無料'), pick('off','使わない')),
+      eng==='mac'? h('p',{class:'small'}, 'MacのClaude Code（今の Max の契約の中）が答えます。追加のお金はかかりません。Macが起きている時だけ・10〜60秒ほど。Macが寝ている時は、自動で ChatGPT / Claude に渡す形になります。') : null,
+      eng==='off'? h('p',{class:'small',text:'相談は ChatGPT / Claude に渡す形だけにします。'}) : null,
+      eng==='gemini'? h('div',{},
+        h('p',{class:'small'}, gk? `Gemini の無料枠を使っています（キー …${gk.slice(-4)}）。入力はGoogleの改善に使われることがあるので、悩みや仕事の中身は書かないでください。` : 'Gemini の無料のキーを入れると、アプリの中で答えます。'),
+        !gk? h('p',{class:'small'}, '① ', h('a',{href:'https://aistudio.google.com/apikey',target:'_blank',rel:'noopener',text:'Google AI Studio のキーの画面'}), ' を個人のGoogleで開く ②「APIキーを作成」③ できたキーを下に貼る（カードは登録しないでください）') : null,
+        h('div',{class:'row'}, ki, h('button',{class:'btn sm',onclick:async()=>{ const v=ki.value.trim(); if(!/^AIza[\w-]{20,}$/.test(v)) return toast('キーの形がちがうようです'); LS.del('tutor.gpause'); LS.del('tutor.gskip'); LS.del('tutor.gmodels'); if(await put('settings','gemini',{key:v,updatedAt:today()},'保存しました')) ki.value=''; },text:gk?'差し替える':'保存する'}),
+          gk? h('button',{class:'btn sm ghost',onclick:()=>put('settings','gemini',{key:'',updatedAt:today()},'外しました'),text:'外す'}) : null)) : null));
+  }
   wrap.append(h('div',{class:'grid g2'}, left, right));
   if(sub==='tries'&&S.scrollTries) setTimeout(()=>{ const el=document.getElementById('tries'); if(el) el.scrollIntoView({behavior:'smooth'}); },80);
   return wrap;
@@ -752,7 +845,7 @@ async function tryLogin(pass){
 function logout(){ LS.del('tutor.token'); location.hash='#/home'; location.reload(); } // 未保存の分（ops）と表示用の控えは残す。次にログインした時に送られる
 function startGithub(tok){
   S.mode='github'; S.err=''; S.relogin=false;
-  store=makeQueued('github',githubRemote(window.TUTOR_CONFIG,tok)); store.start();
+  S.remote=githubRemote(window.TUTOR_CONFIG,tok); store=makeQueued('github',S.remote); store.start();
 }
 
 /* ---------- 起動 ---------- */
