@@ -293,6 +293,7 @@ function makeQueued(name,remote){ // github / local：書き込みは手元で�
       setSync('読み込み中…');
       await st.refresh(true);
       document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') st.refresh(); });
+      setInterval(()=>{ if(document.visibilityState==='visible'&&!busy) st.refresh(); },30*60*1000); // 開きっぱなしでも30分ごとに新しい号を読み直す
       window.addEventListener('online',()=>flush());
     },
     async refresh(first){
